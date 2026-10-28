@@ -148,15 +148,15 @@ h1{font-size:26px;line-height:1.35;font-weight:700;letter-spacing:.5px;margin-bo
 <section id="start" class="screen active">
   <div class="mark" aria-hidden="true">
     <svg viewBox="0 0 200 156">
-      <ellipse cx="100" cy="142" rx="46" ry="7" fill="#E8CDBF"/>
-      <path d="M100 46c32 0 54 24 54 50 0 28-24 48-54 48s-54-20-54-48c0-26 22-50 54-50z" fill="#E89A86"/>
-      <path d="M78 78c8-16 18-28 28-32 4 10 2 24-6 38-10 4-18 2-22-6z" fill="#F6D0C4" opacity=".8"/>
-      <path d="M100 50c2-14 4-20 4-20" stroke="#6E8462" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <path d="M100 50C92 32 80 28 78 36C90 38 98 46 100 50Z" fill="#7E946C"/>
-      <path d="M100 50C108 32 120 28 122 36C110 38 102 46 100 50Z" fill="#8AA67A"/>
-      <path d="M100 50C78 56 70 70 78 74C90 64 98 54 100 50Z" fill="#6E8462"/>
-      <path d="M100 50C122 56 130 70 122 74C110 64 102 54 100 50Z" fill="#7E946C"/>
-      <circle cx="100" cy="50" r="4.5" fill="#5E7454"/>
+      <ellipse cx="100" cy="140" rx="44" ry="7" fill="#E8CDBF"/>
+      <path d="M64 98c2 26 16 42 36 42s34-16 36-42c2-26-14-50-36-52-22 2-38 26-36 52z" fill="#F0A888"/>
+      <ellipse cx="84" cy="86" rx="14" ry="9" fill="#F8D7C6" opacity=".8"/>
+      <path d="M100 50v-16" stroke="#6E8462" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M100 54C88 28 70 30 74 42C86 40 96 50 100 54Z" fill="#7E946C"/>
+      <path d="M100 54C112 28 130 30 126 42C114 40 104 50 100 54Z" fill="#8AA67A"/>
+      <path d="M100 54C70 64 64 84 78 86C88 72 96 58 100 54Z" fill="#6E8462"/>
+      <path d="M100 54C130 64 136 84 122 86C112 72 104 58 100 54Z" fill="#7E946C"/>
+      <circle cx="100" cy="54" r="5" fill="#5E7454"/>
     </svg>
   </div>
   <p class="eyebrow">娱乐向 · 自我观察</p>
@@ -535,16 +535,12 @@ function radarSVG(r){
     const rr=Math.max(0,Math.min(100,v))/100*R;
     return [cx+rr*Math.cos(a), cy+rr*Math.sin(a)];
   };
-  let rings='', axes='', nums='';
+  let rings='', axes='';
   [25,50,75,100].forEach(k=>{
     const pts=[];
     for(let i=0;i<n;i++) pts.push(pt(i,k).map(v=>v.toFixed(1)).join(','));
     const strong=k===50||k===100;
     rings+='<polygon points="'+pts.join(' ')+'" fill="'+(k===100?'rgba(224,139,120,0.06)':'none')+'" stroke="'+(strong?'#E4C4B6':'#F0D9CE')+'" stroke-width="'+(strong?'1.6':'1')+'"/>';
-    const down=Math.PI/2;
-    const sx=cx+(k/100)*R*Math.cos(down)+11;
-    const sy=cy+(k/100)*R*Math.sin(down);
-    nums+='<text x="'+sx.toFixed(1)+'" y="'+sy.toFixed(1)+'" text-anchor="start" dominant-baseline="middle" font-size="10" fill="#B08980">'+k+'</text>';
   });
   for(let i=0;i<n;i++){
     const p=pt(i,100);
@@ -567,10 +563,10 @@ function radarSVG(r){
     labels+='<text x="'+x.toFixed(1)+'" y="'+(y+10).toFixed(1)+'" text-anchor="'+anchor+'" font-size="15" font-weight="700" fill="#C46B5A"'+halo+'>'+d.score+'</text>';
   });
   const aria='三维雷达图，刻度 0 到 100。'+dims.map(d=>d.name+' '+d.score).join('，');
-  return '<svg viewBox="0 0 440 430" role="img" aria-label="'+esc(aria)+'">'+
+  return '<svg viewBox="0 36 440 286" role="img" aria-label="'+esc(aria)+'">'+
     rings+axes+
     '<polygon points="'+poly+'" fill="rgba(224,139,120,0.34)" stroke="#C46B5A" stroke-width="2.4" stroke-linejoin="round"/>'+
-    dots+nums+labels+'</svg>';
+    dots+labels+'</svg>';
 }
 function renderResult(r){
   current=r;
@@ -832,6 +828,7 @@ function showShare(){
     $('shareImg').src=u;
     $('shareImg').alt='你有多容易被人欺负测试 '+current.profile.title+' 软柿子指数'+current.index;
     window.__shareUrl=u;
+    $('toast').classList.remove('show');
     $('ov').classList.add('show');
   }catch(e){
     console.error(e);
