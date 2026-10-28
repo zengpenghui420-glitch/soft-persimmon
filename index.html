@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FBF3EE">
+<meta name="description" content="你有多容易被人欺负测试。18 道原创情景题，看看拒绝困难、边界松软、冲突回避。娱乐向自我观察，非正式心理测量，非诊断。">
+<meta property="og:title" content="你有多容易被人欺负测试">
+<meta property="og:description" content="你是软柿子体质吗。娱乐向自我观察，非正式心理测量，非诊断。高分是退让倾向的线索。">
+<meta property="og:url" content="https://zengpenghui420-glitch.github.io/soft-persimmon/">
+<link rel="canonical" href="https://zengpenghui420-glitch.github.io/soft-persimmon/">
+<title>你有多容易被人欺负测试</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FBF3EE'/%3E%3Cellipse cx='16' cy='18' rx='8' ry='7' fill='%23E89A86'/%3E%3Cpath d='M16 12c2-3 5-4 6-3-2 1-4 2-6 3zM16 12c-2-3-5-4-6-3 2 1 4 2 6 3z' fill='%237E946C'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#FBF3EE;--card:#FFFCF9;--ink:#3C2A28;--muted:#8A6B66;--faint:#B08980;
+  --coral:#E08B78;--coral-deep:#C46B5A;--peach:#F3C1B0;--apricot:#F8E3D4;--blush:#FDE8E2;
+  --line:#F0D5C8;--leaf:#7E946C;
+  --sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{background:#F3E4DA;color-scheme:light}
+body{
+  max-width:430px;margin:0 auto;min-height:100dvh;color:var(--ink);line-height:1.6;
+  font-family:"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Noto Sans SC","WenQuanYi Micro Hei","Droid Sans Fallback","Microsoft YaHei",sans-serif;
+  background:
+    radial-gradient(circle at 8% -8%, rgba(224,139,120,.20), transparent 38%),
+    radial-gradient(circle at 100% 0%, rgba(243,193,176,.55), transparent 36%),
+    linear-gradient(180deg,#FFF8F3,#FBF3EE 46%,#F8E6DC);
+  overflow-x:hidden
+}
+body.lock{overflow:hidden}
+button,input{font-family:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+[hidden]{display:none !important}
+.screen{display:none}
+.screen.active{display:block}
+#start.active,#quiz.active,#loading.active{display:flex;flex-direction:column;min-height:100dvh}
+#loading.active{align-items:center;justify-content:center;text-align:center;padding:24px}
+#start{padding:calc(22px + var(--st)) 22px calc(22px + var(--sb));text-align:center}
+.mark{width:168px;height:128px;margin:4px auto 2px}
+.mark svg{width:100%;height:auto;display:block}
+.eyebrow{font-size:12px;letter-spacing:3px;color:var(--coral-deep);font-weight:600;margin-bottom:8px}
+h1{font-size:26px;line-height:1.35;font-weight:700;letter-spacing:.5px;margin-bottom:8px}
+.sub{font-size:16px;color:#A85A4C;margin-bottom:8px}
+.warm{font-size:13px;color:var(--muted);margin-bottom:14px}
+.dim-intro{list-style:none;text-align:left;display:flex;flex-direction:column;gap:8px;margin:0 0 16px}
+.dim-intro li{display:flex;gap:10px;align-items:center;background:rgba(255,252,249,.9);border:1px solid var(--line);border-radius:16px;padding:8px 12px}
+.dim-intro i{flex:0 0 28px;width:28px;height:28px;border-radius:9px;background:var(--blush);color:var(--coral-deep);font-style:normal;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.dim-intro b{display:block;font-size:14px;line-height:1.3}
+.dim-intro span{display:block;font-size:12px;color:var(--muted);line-height:1.45}
+.pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
+.pill{padding:5px 10px;border-radius:999px;background:rgba(255,252,249,.92);border:1px solid var(--line);color:var(--coral-deep);font-size:12px}
+.btn-primary{width:100%;padding:15px 16px;border:none;border-radius:28px;background:linear-gradient(180deg,#E7A090,#C46B5A);color:#FFFCF9;font-size:17px;font-weight:700;box-shadow:0 8px 18px rgba(196,107,90,.22)}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.65}
+.btn-ghost{width:100%;margin-top:10px;padding:13px 16px;border-radius:28px;border:1.5px solid #E7C4B8;background:rgba(255,252,249,.92);color:#A85A4C;font-size:15px;font-weight:600}
+.btn-ghost:active{transform:scale(.98)}
+.hint{margin-top:14px;font-size:12px;color:var(--faint);line-height:1.6}
+.disclaimer{margin-top:16px;padding:12px 12px 12px 14px;background:#F8EBE4;border:1px solid #EBD3C8;border-left:4px solid var(--coral);border-radius:14px;color:#4A342F;font-size:13px;line-height:1.7;text-align:left}
+.disclaimer strong{font-weight:700}
+.qh{padding:14px 18px 12px;background:rgba(251,243,238,.94);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;backdrop-filter:blur(8px)}
+.qrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.qback{background:none;border:none;color:var(--muted);font-size:14px;padding:4px 0}
+.qprog{font-size:13px;color:var(--coral-deep);font-weight:700}
+.track{height:6px;background:#F0DDD4;border-radius:3px;overflow:hidden}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#F3C1B0,#E08B78);border-radius:3px;transition:width .3s}
+.qbody{padding:22px 20px 28px}
+.qno{font-size:12px;letter-spacing:2px;color:var(--coral-deep);font-weight:700;margin-bottom:8px}
+.qtext{font-size:20px;font-weight:700;line-height:1.5;margin-bottom:18px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 14px;background:rgba(255,252,249,.94);border:1.5px solid var(--line);border-radius:16px;color:var(--ink);font-size:15px;box-shadow:0 3px 0 rgba(240,213,200,.9)}
+.opt .onum{flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:var(--apricot);color:var(--coral-deep);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.opt.sel,.opt:active{border-color:var(--coral);background:#FDECE6;color:#A85A4C}
+.opt.sel .onum{background:var(--coral);color:#FFFCF9}
+.loader{width:40px;height:40px;border:3px solid #F0D5C8;border-top-color:var(--coral);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 16px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.load-title{font-weight:700;color:var(--coral-deep)}
+.load-sub{margin-top:6px;font-size:13px;color:var(--faint)}
+#result{padding-bottom:calc(196px + var(--sb))}
+.rtop{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(251,243,238,.94);border-bottom:1px solid var(--line);font-size:14px;font-weight:700;backdrop-filter:blur(8px)}
+.rtop span:last-child{font-weight:500;color:#A85A4C;font-size:13px}
+.result-body{padding:16px 16px 8px}
+.card{position:relative;background:linear-gradient(180deg,rgba(255,252,249,.98),rgba(255,248,244,.94));border:1px solid var(--line);border-radius:22px;padding:18px 16px 16px;margin-bottom:12px;box-shadow:0 10px 24px rgba(120,70,55,.05)}
+.kicker{font-size:12px;letter-spacing:4px;color:var(--coral-deep);font-weight:700}
+.index-num{font-size:68px;line-height:.95;font-weight:700;color:var(--coral-deep);letter-spacing:-1px;margin:4px 0 2px}
+.index-max{font-size:12px;color:var(--faint);margin-bottom:10px}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap}
+.lv{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--apricot);color:var(--coral-deep);font-size:13px;font-weight:700}
+.lv-line{margin-top:8px;font-size:14px;color:#5C403C;line-height:1.65}
+.lead{margin-top:14px;font-size:12px;letter-spacing:2px;color:#A85A4C;font-weight:700}
+.type-title{font-size:28px;line-height:1.25;margin:4px 0 6px}
+.punch{font-size:15px;line-height:1.7;color:#4A342F}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tag{padding:4px 10px;border-radius:999px;background:var(--blush);color:#A85A4C;font-size:12px;font-weight:600}
+.note{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.6}
+.st{font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:12px}
+.st:before{content:"";display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:2px;background:var(--coral);transform:translateY(-1px) rotate(45deg)}
+.fine{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.65}
+.radar-box svg{width:100%;height:auto;display:block}
+.bar{margin-top:12px}
+.bar-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:700}
+.bar-h b{color:var(--coral-deep);font-size:16px}
+.bar-track{height:8px;background:#F3E0D6;border-radius:99px;overflow:hidden;margin-top:4px}
+.bar-fill{height:100%;width:0;background:linear-gradient(90deg,#F3C1B0,#E08B78);border-radius:99px}
+.bullets{list-style:none;display:flex;flex-direction:column;gap:10px}
+.bullets li{position:relative;padding-left:14px;font-size:14.5px;line-height:1.7;color:#3E3230}
+.bullets li:before{content:"";position:absolute;left:0;top:.72em;width:6px;height:6px;border-radius:50%;background:var(--coral)}
+.dim-read{padding:12px 0;border-top:1px solid var(--line)}
+.dim-read:first-of-type{border-top:none;padding-top:0}
+.dim-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dn{font-size:14px;font-weight:700}
+.ds{font-size:18px;font-weight:700;color:#A85A4C}
+.dim-read p{margin-top:4px;font-size:13.5px;color:var(--muted);line-height:1.7}
+#result .disclaimer{margin:4px 0 12px}
+.acts{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:8px 12px calc(10px + var(--sb));background:rgba(255,252,249,.97);border-top:1px solid var(--line);z-index:20;display:flex;flex-direction:column;gap:6px}
+.acts-note{font-size:11px;color:var(--muted);text-align:center;line-height:1.45}
+.acts-row{display:flex;gap:8px}
+.acts-row button{flex:1;padding:11px 4px;border-radius:22px;font-size:13px;font-weight:700}
+.bo{border:1.5px solid #E7C4B8;background:#fff;color:#A85A4C}
+.bp{border:none;background:linear-gradient(180deg,#E7A090,#C46B5A);color:#FFFCF9}
+.ov{position:fixed;inset:0;background:rgba(60,42,40,.82);z-index:200;display:none;flex-direction:column;align-items:center;padding:16px 16px calc(16px + var(--sb));overflow-y:auto}
+.ov.show{display:flex}
+.ov img{width:min(100%,400px);border-radius:16px;background:#FBF3EE}
+.ovh{color:#FBF3EE;font-size:14px;margin:8px 0 12px}
+.ovb{display:flex;gap:10px;width:100%;max-width:400px;margin-top:12px}
+.ovb button{flex:1;padding:12px;border:none;border-radius:22px;font-size:15px;font-weight:700}
+.ovb .save{background:#fff;color:var(--coral-deep)}
+.ovb .shut{background:rgba(255,252,249,.16);color:#FFFCF9}
+.toast{position:fixed;bottom:calc(210px + var(--sb));left:50%;transform:translateX(-50%);background:rgba(60,42,40,.92);color:#FFFCF9;padding:10px 16px;border-radius:20px;font-size:13px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;max-width:88%;text-align:center}
+.toast.show{opacity:1}
+.code-mask{position:fixed;inset:0;background:rgba(60,42,40,.42);z-index:150;display:none;align-items:center;justify-content:center;padding:20px}
+.code-mask.show{display:flex}
+.code-panel-wrap{position:relative;width:100%;max-width:340px}
+.code-panel{background:#FFFCF9;border:1.5px solid var(--line);border-radius:22px;padding:24px 18px 18px;box-shadow:0 16px 40px rgba(60,42,40,.16);text-align:center}
+.code-panel h3{font-size:18px;margin-bottom:14px}
+.code-panel input{width:100%;padding:14px 12px;border:1.5px solid var(--line);border-radius:14px;font-size:18px;letter-spacing:2px;text-align:center;color:var(--ink);background:#FBF6F2;outline:none}
+.code-panel input:focus{border-color:var(--coral);background:#fff}
+.code-panel .btn-primary{margin-top:12px}
+.code-hint{margin-top:12px;font-size:12px;color:var(--faint);line-height:1.6}
+.code-close{position:absolute;top:8px;right:12px;background:none;border:none;font-size:22px;color:var(--faint);line-height:1;padding:4px}
+@media (prefers-reduced-motion:reduce){.fill,.toast,.bar-fill{transition:none}.loader{animation:none}}
+</style>
+</head>
+<body>
+<section id="start" class="screen active">
+  <div class="mark" aria-hidden="true">
+    <svg viewBox="0 0 200 156">
+      <ellipse cx="100" cy="140" rx="44" ry="7" fill="#E8CDBF"/>
+      <path d="M64 98c2 26 16 42 36 42s34-16 36-42c2-26-14-50-36-52-22 2-38 26-36 52z" fill="#F0A888"/>
+      <ellipse cx="84" cy="86" rx="14" ry="9" fill="#F8D7C6" opacity=".8"/>
+      <path d="M100 50v-16" stroke="#6E8462" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M100 54C88 28 70 30 74 42C86 40 96 50 100 54Z" fill="#7E946C"/>
+      <path d="M100 54C112 28 130 30 126 42C114 40 104 50 100 54Z" fill="#8AA67A"/>
+      <path d="M100 54C70 64 64 84 78 86C88 72 96 58 100 54Z" fill="#6E8462"/>
+      <path d="M100 54C130 64 136 84 122 86C112 72 104 58 100 54Z" fill="#7E946C"/>
+      <circle cx="100" cy="54" r="5" fill="#5E7454"/>
+    </svg>
+  </div>
+  <p class="eyebrow">娱乐向 · 自我观察</p>
+  <h1>你有多容易被人欺负测试</h1>
+  <p class="sub">你是软柿子体质吗</p>
+  <p class="warm">不是让你变硬，是让你知道哪里容易被捏</p>
+  <ul class="dim-intro">
+    <li><i>R</i><div><b>拒绝困难</b><span>很难说「不」，怕扫兴</span></div></li>
+    <li><i>B</i><div><b>边界松软</b><span>责任和情绪容易被塞进来</span></div></li>
+    <li><i>C</i><div><b>冲突回避</b><span>一紧张就想抹平</span></div></li>
+  </ul>
+  <div class="pills"><span class="pill">18 道情景题</span><span class="pill">五级自评</span><span class="pill">约 3 分钟</span></div>
+  <button class="btn-primary" id="btnStart" type="button">开始测试</button>
+  <button class="btn-ghost" id="btnLast" type="button" hidden>查看上次结果</button>
+  <p class="hint">单选 · 没有标准答案 · 高分是退让倾向的线索，不是性格判定</p>
+  <p class="disclaimer" id="startDisclaimer"></p>
+</section>
+
+<section id="quiz" class="screen">
+  <div class="qh">
+    <div class="qrow"><button class="qback" id="qback" type="button">← 返回</button><span class="qprog" id="qprog"></span></div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+  </div>
+  <div class="qbody">
+    <div class="qno" id="qno"></div>
+    <div class="qtext" id="qtext"></div>
+    <div class="opts" id="opts"></div>
+  </div>
+</section>
+
+<section id="loading" class="screen">
+  <div class="loader"></div>
+  <div class="load-title">正在看三处容易被捏的地方…</div>
+  <div class="load-sub">拒绝、边界、冲突，各看一眼</div>
+</section>
+
+<section id="result" class="screen">
+  <div class="rtop"><span>软柿子体质</span><span id="resultMeta"></span></div>
+  <div class="result-body" id="resultBody"></div>
+  <div class="acts">
+    <p class="acts-note">娱乐向自我观察 · 非正式心理测量 · 非诊断</p>
+    <div class="acts-row">
+      <button class="bo" id="btnRetry" type="button">重新测试</button>
+      <button class="bo" id="btnViewLast" type="button">查看上次结果</button>
+    </div>
+    <div class="acts-row">
+      <button class="bo" id="btnCopy" type="button">复制文案</button>
+      <button class="bp" id="btnImg" type="button">生成分享图</button>
+    </div>
+  </div>
+</section>
+
+<div class="ov" id="ov">
+  <div class="ovh">长按图片保存，发给朋友</div>
+  <img id="shareImg" alt="软柿子体质测试分享图">
+  <div class="ovb">
+    <button class="save" id="btnDl" type="button">下载</button>
+    <button class="shut" id="btnClose" type="button">关闭</button>
+  </div>
+</div>
+
+<div class="code-mask" id="codeMask" aria-hidden="true">
+  <div class="code-panel-wrap">
+    <div class="code-panel">
+      <button type="button" class="code-close" id="codeClose" aria-label="关闭">×</button>
+      <h3>输入测试验证码</h3>
+      <input type="text" id="codeInput" placeholder="例如 SP7K3N" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" enterkeyhint="go">
+      <button type="button" class="btn-primary" id="btnCodeOk">开始答题</button>
+      <p class="code-hint">付款后会收到 SP 开头的 6 位验证码<br>每个码可使用 3 次<br>重新测试会再次扣次 · 查看上次结果不扣次</p>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:24px;text-align:center">请开启 JavaScript 后使用本测验。</p></noscript>
+<script>
+const MANTLE_NS='catquiz-zph420-codes';
+const MANTLE_COL='sp';
+const MANTLE_KEY='f60c0dae2088e5ccd5061a110aef0c0ff2a5b85f2658e78809c9123c9d82a22c';
+const MANTLE_BASE='https://mantledb.sh/v2/'+MANTLE_NS;
+const ACCESS_KEY='soft_persimmon_unlocked';
+const ACCESS_CODE_KEY='soft_persimmon_code';
+const LAST_KEY='soft_persimmon_last_result';
+const CODE_RE=/^SP[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}$/;
+const URL_='https://zengpenghui420-glitch.github.io/soft-persimmon/';
+const DISCLAIMER='本测试为娱乐向自我观察，题目为原创日常情景，非正式心理测量、非诊断。软柿子指数只是在关系里更容易退让的倾向线索，高分不等于软弱无能，也不是性格缺陷。若长期感到委屈，或关系里的伤害已经很大，可以寻求正规心理咨询。';
+const FONT='"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Noto Sans SC","WenQuanYi Micro Hei","Droid Sans Fallback","Microsoft YaHei",sans-serif';
+const CHOICES=[{v:1,t:'完全不像我'},{v:2,t:'不太像'},{v:3,t:'说不清'},{v:4,t:'有点像'},{v:5,t:'非常像我'}];
+const DIM_IDS=['R','B','C'];
+const CLOSE=5;
+
+const QS=[
+  {dim:'R', t:'明明已经很累，朋友再约「就一趟」，我还是会先说「行吧」。'},
+  {dim:'B', t:'别人心情不好，我常会自动接过安抚和善后的责任。'},
+  {dim:'C', t:'服务出错或不公时，我更想算了，不想当面提。'},
+  {dim:'R', t:'同事临时把活甩过来，即使不合理，我口头也很难直接拒绝。'},
+  {dim:'B', t:'分不清「这是对方的情绪」还是「我必须立刻修好」。'},
+  {dim:'C', rev:true, t:'不适的时候，我可以比较直接地把感受说给对方听。'},
+  {dim:'R', t:'推销/邀约时，我常因为不好意思翻脸而拖着不说「不需要」。'},
+  {dim:'B', rev:true, t:'哪些事该我管、哪些不该，我心里通常有一条比较清楚的线。'},
+  {dim:'C', t:'关系里一出现紧张，我会先想办法把场面抹平。'},
+  {dim:'R', t:'答应之后常后悔，但当着对方面改口对我来说很难。'},
+  {dim:'B', t:'亲戚或朋友把他们的事讲成「你也应该管」，我容易跟着着急。'},
+  {dim:'C', t:'有不同意见时，我常选择附和，事后再自己消化。'},
+  {dim:'R', rev:true, t:'面对不想做的请求，我能比较干脆地说明自己帮不了。'},
+  {dim:'B', t:'借钱、占时间、蹭资源时，我很难说清自己的底线在哪。'},
+  {dim:'C', t:'说完「不」或表达不满后，我会反复担心对方是不是生气了。'},
+  {dim:'R', t:'别人一说「就你行」「帮个忙嘛」，我防线会软一大截。'},
+  {dim:'B', t:'对方一装可怜或示弱，我的原则会明显松动。'},
+  {dim:'C', t:'被说难听话时，我第一反应是软下来或道歉，而不是先澄清。'}
+];
+
+const PORTRAITS={
+  R:{
+    dim:'拒绝困难', name:'老好人答应机', short:'答应机',
+    clue:'请求来了先答应，事后才后悔',
+    portrait:'请求一来，你的第一反应常常是先答应，再想自己扛不扛得住。',
+    tags:['先答应','怕扫兴','事后后悔'],
+    traits:[
+      '周末已经没什么电了，有人再补一句「就一趟」，你还是会先把行程让出来。',
+      '工位上临时多出一份不属于你的活，你往往先接下来，拒绝的话在嘴边停住。',
+      '柜台前的推销多聊了几句，常常是因为你不好意思直接说不需要。',
+      '点头之后才想起自己的安排，可当着对方面把话收回来，你会觉得更难。',
+      '「就你行」三个字一出来，你原本准备好的拒绝会软掉一大截。'
+    ],
+    advice:[
+      '先回「我今晚确认，明天给你答复」，把答应从反射改成一个决定。',
+      '拒绝只留一句事实：「这次我帮不了。」不必再补三句歉。',
+      '在备忘录存两句现成的话：「这周排满了」「这件事我接不了」，要用时直接发出去。',
+      '听到「就你行」时，在心里接一句：行不行，要看我这周还剩多少。'
+    ],
+    bands:{
+      low:'不想做的请求，你比较能直接说明自己帮不了。',
+      mid:'有的场合你会先答应，也有的场合能把「不」说出来。',
+      high:'请求一到，你常常先答应，事后才觉得后悔。'
+    }
+  },
+  B:{
+    dim:'边界松软', name:'情绪垃圾桶', short:'情绪桶',
+    clue:'情绪和责任容易被塞进来',
+    portrait:'别人的情绪和善后，很容易顺着你的好心滑到你这边。',
+    tags:['接情绪','替善后','界线模糊'],
+    traits:[
+      '旁边的人一低落，你已经在想怎么安抚、怎么把后面的事一起收拾掉。',
+      '对方还在生气，你分不清那是对方的情绪，还是你必须马上修好的任务。',
+      '家里长辈把一件亲戚的事说成「你也该管」，你会不自觉地跟着急。',
+      '借钱、多占你一小时、用你的资源，你一时说不出底线停在哪里。',
+      '对方一示弱，你写好的原则会松一截，事情又回到你这边。'
+    ],
+    advice:[
+      '开口前在心里标三个字：谁的事。标完再决定帮不帮。',
+      '可以陪着听，善后只做一件你愿意做的，其余交还给对方。',
+      '借钱和占时间用同一句收尾：「我这次帮到这里。」说完就停，不再加码。',
+      '把底线写在备忘录第一条。对方示弱时先看一眼，再回答。'
+    ],
+    bands:{
+      low:'哪些该管、哪些不该，你心里通常有一条比较清楚的线。',
+      mid:'有些情绪你会接，也有些事你能分清不是自己的。',
+      high:'别人的情绪和善后，比较容易被你接过去。'
+    }
+  },
+  C:{
+    dim:'冲突回避', name:'息事宁人派', short:'息事派',
+    clue:'一紧张就想把场面抹平',
+    portrait:'气氛一紧，你会先把场面抹平，把自己的不适放到后面。',
+    tags:['先抹平','怕对方气','事后消化'],
+    traits:[
+      '上错菜、算错账，你更常选择算了，把话留在嘴里。',
+      '聊天气氛一紧，你的注意力会先去找圆场的那句话。',
+      '意见不同的时候，你先点头，不同的那部分留到散会后自己消化。',
+      '刚说完不痛快，接下来一段时间都在想对方会不会因此生气。',
+      '听到难听的话，你先软下来或先道歉，澄清被放到了后面。'
+    ],
+    advice:[
+      '服务出错时只说事实：「这杯和我点的不一样。」语气可以轻，内容不用收走。',
+      '想附和之前加半句：「我有一点不同的看法。」然后只说一件具体的事。',
+      '担心对方生气时，把要发的消息存进草稿，今晚先不追问。',
+      '被顶回来时先说：「我想确认一下你的意思。」再决定要不要道歉。'
+    ],
+    bands:{
+      low:'不适的时候，你比较能把感受直接说出来。',
+      mid:'紧张时你会想缓和，也还能留下一部分自己的意见。',
+      high:'一紧张你就想先把场面抹平，自己的不适放到后面。'
+    }
+  },
+  peach:{
+    dim:'', name:'有刺水蜜桃', short:'有刺水蜜桃',
+    clue:'看着可以商量，边界并不好捏',
+    portrait:'你看着可以商量，真碰到自己的边界，并不那么好捏。',
+    tags:['不太好捏','能说不','有底线'],
+    traits:[
+      '不想接的请求，你比较能直接说自己帮不了，不必绕很久。',
+      '哪些事该你管、哪些不该，你心里通常有一条还算清楚的线。',
+      '不舒服的时候，你可以把感受说给对方听，而不必先把自己收起来。',
+      '别人示弱或催你，不太能把你的原则一下子揉软。',
+      '场面紧张时，你不一定急着先把所有棱角抹平。'
+    ],
+    advice:[
+      '拒绝时仍可以留一句温度：「这次不行。你若只是想说说，我可以听。」',
+      '边界清楚，也可以主动告诉在意的人：你愿意帮到哪一步。',
+      '「不」说完停两秒，确认对方听懂了，而不是听成被推开。',
+      '偶尔退一步可以是你的选择。你已经有刺，也可以挑着软。'
+    ]
+  },
+  ripe:{
+    dim:'', name:'全熟软柿', short:'全熟软柿',
+    clue:'拒绝、边界和冲突三处都偏软',
+    portrait:'拒绝、边界和冲突三处都偏软。关系里你常常先退一步。',
+    tags:['三处都软','先退让','可练说不'],
+    traits:[
+      '请求、别人的情绪和紧张的场面叠在一起时，你往往三处都先让。',
+      '答应、接手善后、把气氛抹平，有时会在同一天里接连发生。',
+      '委屈多半是事后才清晰，当时却很难把已经说出的话改回来。',
+      '「就你行」和对方示弱，都容易让你原本的原则松动。',
+      '表达不满之后，担心对方生气的时间，常常比事情本身更长。'
+    ],
+    advice:[
+      '这周只练一种「不」：对最小的那件请求，说「我这次帮不了」。',
+      '每天留一件「不是我的事」不接。写在备忘录里，做完打一个勾。',
+      '气氛紧的时候，只说感受的前半句，后半句留到明天。',
+      '找一个你觉得安全的人，约定：你又要立刻答应时，对方提醒你停十秒。'
+    ]
+  }
+};
+
+let ans=[];
+let qi=0;
+let picking=false;
+let current=null;
+let codeBusy=false;
+
+function $(id){return document.getElementById(id)}
+function el(tag, cls, text){
+  const n=document.createElement(tag);
+  if(cls) n.className=cls;
+  if(text!=null) n.textContent=text;
+  return n;
+}
+function esc(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function bandOf(score){return score<40?'low':score<70?'mid':'high'}
+function levelOf(index){
+  if(index<=24) return {id:'core', name:'铁核边界型', line:'不太好捏。边界在你这里比较清楚。'};
+  if(index<=49) return {id:'thorn', name:'外柔有刺型', line:'看着好说话，碰到底线并不会一直让。'};
+  if(index<=74) return {id:'situ', name:'情境软化型', line:'特定的关系和场面里，你比较容易先退一步。'};
+  return {id:'soft', name:'软柿子体质', line:'退让的模式偏强。值得练的是温柔地说不，不是把自己变硬。'};
+}
+function itemScore(q, v){return q.rev ? 6-v : v}
+function to100(arr){
+  const mean=arr.reduce((a,b)=>a+b,0)/arr.length;
+  return Math.round((mean-1)/4*100);
+}
+function dimBlock(id, score){
+  const p=PORTRAITS[id];
+  return {id:id, name:p.dim, score:score, text:p.bands[bandOf(score)]};
+}
+function buildProfile(ids){
+  if(ids.length===1){
+    const p=PORTRAITS[ids[0]];
+    return {title:p.name, portrait:p.portrait, tags:p.tags.slice(), traits:p.traits.slice(), advice:p.advice.slice()};
+  }
+  const a=PORTRAITS[ids[0]], b=PORTRAITS[ids[1]];
+  return {
+    title:a.short+'×'+b.short,
+    portrait:a.dim+'和'+b.dim+'这两处很接近：一边'+a.clue+'，一边'+b.clue+'。',
+    tags:[a.tags[0], b.tags[0], a.tags[1]],
+    traits:[a.traits[0], a.traits[1], b.traits[0], b.traits[1]],
+    advice:[a.advice[0], b.advice[0], a.advice[1], b.advice[1]]
+  };
+}
+function analyze(scores){
+  const index=Math.round((scores.R+scores.B+scores.C)/3);
+  const level=levelOf(index);
+  let dominantIds, note='';
+  if(DIM_IDS.every(id=>scores[id]<40)){
+    dominantIds=['peach'];
+    note='三维都在 40 分以下，所以主导画像是有刺水蜜桃，而不是某一维的单名。';
+  }else if(DIM_IDS.every(id=>scores[id]>=65)){
+    dominantIds=['ripe'];
+    note='三维都在 65 分及以上，所以主导画像是全熟软柿。';
+  }else{
+    const ranked=DIM_IDS.map(id=>({id:id, score:scores[id]}))
+      .sort((a,b)=>(b.score-a.score)||(DIM_IDS.indexOf(a.id)-DIM_IDS.indexOf(b.id)));
+    if(ranked[0].score-ranked[1].score<=CLOSE){
+      dominantIds=[ranked[0].id, ranked[1].id].sort((a,b)=>DIM_IDS.indexOf(a)-DIM_IDS.indexOf(b));
+      note=ranked[0].score-ranked[2].score<=CLOSE
+        ? '三维分数很接近，称号取排序靠前的两项。'
+        : PORTRAITS[dominantIds[0]].dim+'和'+PORTRAITS[dominantIds[1]].dim+'很接近，称号取双名。';
+    }else{
+      dominantIds=[ranked[0].id];
+      if(ranked[0].score-ranked[2].score<=8) note='三项差距不大。主导画像只是相对更明显的那一维，不是定论。';
+    }
+  }
+  const report={
+    index:index, level:level, dominantIds:dominantIds,
+    profile:buildProfile(dominantIds), note:note,
+    dims:DIM_IDS.map(id=>dimBlock(id, scores[id]))
+  };
+  DIM_IDS.forEach(id=>{report[id]=scores[id]});
+  return report;
+}
+function scoreFromAnswers(list){
+  const bucket={R:[],B:[],C:[]};
+  for(let i=0;i<QS.length;i++) bucket[QS[i].dim].push(itemScore(QS[i], list[i]));
+  const scores={};
+  DIM_IDS.forEach(id=>{scores[id]=to100(bucket[id])});
+  return analyze(scores);
+}
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
+  window.scrollTo(0,0);
+}
+function toast(msg){
+  const t=$('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function renderQ(){
+  const q=QS[qi];
+  $('qprog').textContent=(qi+1)+' / '+QS.length;
+  $('fill').style.width=((qi+1)/QS.length*100)+'%';
+  $('qno').textContent='第 '+(qi+1)+' 题';
+  $('qtext').textContent=q.t;
+  $('qback').textContent=qi?'← 上一题':'← 返回';
+  const box=$('opts');
+  box.textContent='';
+  CHOICES.forEach(c=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='opt'+(ans[qi]===c.v?' sel':'');
+    b.appendChild(el('span','onum',String(c.v)));
+    b.appendChild(el('span','olab',c.t));
+    b.onclick=()=>pick(c.v);
+    box.appendChild(b);
+  });
+}
+function pick(v){
+  if(picking) return;
+  picking=true;
+  ans[qi]=v;
+  document.querySelectorAll('#opts .opt').forEach((node,k)=>node.classList.toggle('sel', k===v-1));
+  setTimeout(()=>{
+    picking=false;
+    if(qi<QS.length-1){qi++;renderQ()}
+    else finish();
+  },180);
+}
+function finish(){
+  show('loading');
+  const report=scoreFromAnswers(ans);
+  setTimeout(()=>{
+    try{
+      const saved={index:report.index, at:Date.now()};
+      DIM_IDS.forEach(id=>{saved[id]=report[id]});
+      localStorage.setItem(LAST_KEY, JSON.stringify(saved));
+    }catch(e){}
+    refreshLastBtn();
+    renderResult(report);
+    show('result');
+  },900);
+}
+function fillDisclaimer(node){
+  node.textContent='';
+  const marks=['非正式心理测量、非诊断','高分不等于软弱无能'];
+  const re=new RegExp('('+marks.map(m=>m.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')');
+  DISCLAIMER.split(re).forEach(part=>{
+    if(marks.indexOf(part)>=0) node.appendChild(el('strong',null,part));
+    else if(part) node.appendChild(document.createTextNode(part));
+  });
+}
+function radarSVG(r){
+  const dims=DIM_IDS.map(id=>({name:PORTRAITS[id].dim, score:r[id]}));
+  const cx=220, cy=214, R=92, n=dims.length;
+  const pt=(i,v)=>{
+    const a=-Math.PI/2+(i*2*Math.PI)/n;
+    const rr=Math.max(0,Math.min(100,v))/100*R;
+    return [cx+rr*Math.cos(a), cy+rr*Math.sin(a)];
+  };
+  let rings='', axes='';
+  [25,50,75,100].forEach(k=>{
+    const pts=[];
+    for(let i=0;i<n;i++) pts.push(pt(i,k).map(v=>v.toFixed(1)).join(','));
+    const strong=k===50||k===100;
+    rings+='<polygon points="'+pts.join(' ')+'" fill="'+(k===100?'rgba(224,139,120,0.06)':'none')+'" stroke="'+(strong?'#E4C4B6':'#F0D9CE')+'" stroke-width="'+(strong?'1.6':'1')+'"/>';
+  });
+  for(let i=0;i<n;i++){
+    const p=pt(i,100);
+    axes+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" stroke="#F0D5C8" stroke-width="1"/>';
+  }
+  const poly=dims.map((d,i)=>pt(i,d.score).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const dots=dims.map((d,i)=>{
+    const p=pt(i,d.score);
+    return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="4.2" fill="#FFFCF9" stroke="#C46B5A" stroke-width="2"/>';
+  }).join('');
+  let labels='';
+  const halo=' stroke="#FFFCF9" stroke-width="4" paint-order="stroke"';
+  dims.forEach((d,i)=>{
+    const a=-Math.PI/2+(i*2*Math.PI)/n;
+    const lr=R+46;
+    const x=cx+lr*Math.cos(a);
+    const y=cy+lr*Math.sin(a);
+    const anchor=Math.abs(Math.cos(a))<0.35?'middle':(Math.cos(a)>0?'start':'end');
+    labels+='<text x="'+x.toFixed(1)+'" y="'+(y-8).toFixed(1)+'" text-anchor="'+anchor+'" font-size="13" fill="#3C2A28"'+halo+'>'+esc(d.name)+'</text>';
+    labels+='<text x="'+x.toFixed(1)+'" y="'+(y+10).toFixed(1)+'" text-anchor="'+anchor+'" font-size="15" font-weight="700" fill="#C46B5A"'+halo+'>'+d.score+'</text>';
+  });
+  const aria='三维雷达图，刻度 0 到 100。'+dims.map(d=>d.name+' '+d.score).join('，');
+  return '<svg viewBox="0 36 440 286" role="img" aria-label="'+esc(aria)+'">'+
+    rings+axes+
+    '<polygon points="'+poly+'" fill="rgba(224,139,120,0.34)" stroke="#C46B5A" stroke-width="2.4" stroke-linejoin="round"/>'+
+    dots+labels+'</svg>';
+}
+function renderResult(r){
+  current=r;
+  const root=$('resultBody');
+  root.textContent='';
+  $('resultMeta').textContent=r.level.name;
+
+  const hero=el('section','card');
+  hero.appendChild(el('p','kicker','软柿子指数'));
+  hero.appendChild(el('p','index-num',String(r.index)));
+  hero.appendChild(el('p','index-max','满分 100 · 三维平均'));
+  const badge=el('div','badge-row');
+  badge.appendChild(el('span','lv',r.level.name));
+  hero.appendChild(badge);
+  hero.appendChild(el('p','lv-line',r.level.line));
+  hero.appendChild(el('p','lead','主导画像'));
+  const title=el('h2','type-title',r.profile.title);
+  title.id='typeTitle';
+  hero.appendChild(title);
+  hero.appendChild(el('p','punch',r.profile.portrait));
+  const tags=el('div','tags');
+  r.profile.tags.forEach(t=>tags.appendChild(el('span','tag',t)));
+  hero.appendChild(tags);
+  if(r.note) hero.appendChild(el('p','note',r.note));
+  root.appendChild(hero);
+
+  const radar=el('section','card');
+  radar.id='radarCard';
+  radar.appendChild(el('h2','st','三维雷达'));
+  const box=el('div','radar-box');
+  box.innerHTML=radarSVG(r);
+  radar.appendChild(box);
+  DIM_IDS.forEach(id=>{
+    const row=el('div','bar');
+    row.dataset.dim=id;
+    const head=el('div','bar-h');
+    head.appendChild(el('span',null,PORTRAITS[id].dim));
+    head.appendChild(el('b',null,String(r[id])));
+    row.appendChild(head);
+    const track=el('div','bar-track');
+    const fill=el('div','bar-fill');
+    fill.style.width=Math.max(0,Math.min(100,r[id]))+'%';
+    track.appendChild(fill);
+    row.appendChild(track);
+    radar.appendChild(row);
+  });
+  radar.appendChild(el('p','fine','外圈是 100。越靠外，这一维越偏向在关系里退让。0 是这一维全选「完全不像我」，反向题已按相反方向计入。指数是三维分数的平均。高分是倾向线索，不是性格判定。'));
+  root.appendChild(radar);
+
+  const traits=el('section','card');
+  traits.id='traitCard';
+  traits.appendChild(el('h2','st','特征表现'));
+  const ul=el('ul','bullets');
+  r.profile.traits.forEach(t=>ul.appendChild(el('li',null,t)));
+  traits.appendChild(ul);
+  root.appendChild(traits);
+
+  const adv=el('section','card');
+  adv.id='adviceCard';
+  adv.appendChild(el('h2','st','护界小建议'));
+  const ul2=el('ul','bullets');
+  r.profile.advice.forEach(t=>ul2.appendChild(el('li',null,t)));
+  adv.appendChild(ul2);
+  adv.appendChild(el('p','fine','建议都落在很小的下一步：温柔地说不，把边界说清楚。不必把自己练成另外一种人。'));
+  root.appendChild(adv);
+
+  const dims=el('section','card');
+  dims.id='dimCard';
+  dims.appendChild(el('h2','st','三维短解读'));
+  r.dims.forEach(d=>{
+    const block=el('div','dim-read');
+    const head=el('div','dim-head');
+    head.appendChild(el('span','dn',d.name));
+    head.appendChild(el('span','ds',String(d.score)));
+    block.appendChild(head);
+    block.appendChild(el('p',null,d.text));
+    dims.appendChild(block);
+  });
+  root.appendChild(dims);
+
+  const disc=el('p','disclaimer');
+  disc.id='disclaimer';
+  fillDisclaimer(disc);
+  root.appendChild(disc);
+}
+function resultText(r){
+  const lines=DIM_IDS.map(id=>PORTRAITS[id].dim+' '+r[id]);
+  return [
+    '你有多容易被人欺负测试',
+    '软柿子指数 '+r.index+' · '+r.level.name,
+    '主导画像：'+r.profile.title,
+    lines.join(' · '),
+    '「'+r.profile.portrait+'」',
+    '娱乐向自我观察，非正式心理测量，非诊断。高分是退让倾向的线索，不是性格判定。',
+    URL_
+  ].join('\n');
+}
+function copyText(){
+  if(!current){toast('还没有可复制的结果');return}
+  const t=resultText(current);
+  const done=()=>toast('文案已复制');
+  const fail=()=>{
+    const a=document.createElement('textarea');
+    a.value=t;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');done()}catch(e){toast('复制失败，请长按手动复制')}
+    a.remove();
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(fail);
+  else fail();
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function wrapT(ctx,text,maxW){
+  const out=[];let line='';
+  for(const ch of text){
+    if(ctx.measureText(line+ch).width>maxW && line){out.push(line);line=ch}
+    else line+=ch;
+  }
+  if(line) out.push(line);
+  return out;
+}
+function drawRadarCanvas(ctx,cx,cy,R,r){
+  const vals=DIM_IDS.map(id=>r[id]);
+  const names=DIM_IDS.map(id=>PORTRAITS[id].dim);
+  const n=3;
+  const pt=(i,v)=>{
+    const a=-Math.PI/2+i*2*Math.PI/n;
+    const rr=Math.max(0,Math.min(100,v))/100*R;
+    return [cx+rr*Math.cos(a), cy+rr*Math.sin(a)];
+  };
+  [25,50,75,100].forEach(k=>{
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      const p=pt(i,k);
+      if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);
+    }
+    ctx.closePath();
+    ctx.strokeStyle=(k===50||k===100)?'#E4C4B6':'#F0D9CE';
+    ctx.lineWidth=k===100?3:2;
+    ctx.stroke();
+  });
+  for(let i=0;i<n;i++){
+    const p=pt(i,100);
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(p[0],p[1]);
+    ctx.strokeStyle='#F0D5C8';
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  vals.forEach((v,i)=>{
+    const p=pt(i,v);
+    if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);
+  });
+  ctx.closePath();
+  ctx.fillStyle='rgba(224,139,120,0.36)';
+  ctx.fill();
+  ctx.strokeStyle='#C46B5A';
+  ctx.lineWidth=4;
+  ctx.stroke();
+  vals.forEach((v,i)=>{
+    const p=pt(i,v);
+    ctx.beginPath();
+    ctx.arc(p[0],p[1],7,0,Math.PI*2);
+    ctx.fillStyle='#FFFCF9';
+    ctx.fill();
+    ctx.lineWidth=3;
+    ctx.strokeStyle='#C46B5A';
+    ctx.stroke();
+    const a=-Math.PI/2+i*2*Math.PI/n;
+    const lx=cx+(R+54)*Math.cos(a);
+    const ly=cy+(R+54)*Math.sin(a);
+    ctx.font='600 28px '+FONT;
+    ctx.fillStyle='#3C2A28';
+    ctx.textAlign=Math.abs(Math.cos(a))<0.35?'center':(Math.cos(a)>0?'left':'right');
+    ctx.textBaseline='middle';
+    ctx.fillText(names[i]+' '+vals[i], lx, ly);
+  });
+}
+function buildShare(r){
+  const W=1080,H=1920;
+  const cv=document.createElement('canvas');
+  cv.width=W;cv.height=H;
+  const x=cv.getContext('2d');
+  const g=x.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#FFF8F3');
+  g.addColorStop(.5,'#F8E4D8');
+  g.addColorStop(1,'#F3D2C6');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.fillStyle='rgba(224,139,120,.16)';
+  x.beginPath();x.arc(180,260,280,0,Math.PI*2);x.fill();
+  x.fillStyle='rgba(243,193,176,.35)';
+  x.beginPath();x.arc(920,640,260,0,Math.PI*2);x.fill();
+  x.strokeStyle='#F0D5C8';x.lineWidth=3;x.strokeRect(48,48,W-96,H-96);
+  x.strokeStyle='#C46B5A';x.lineWidth=4;
+  [[80,80,1,1],[W-80,80,-1,1],[80,H-80,1,-1],[W-80,H-80,-1,-1]].forEach(c=>{
+    x.beginPath();x.moveTo(c[0],c[1]+c[3]*28);x.lineTo(c[0],c[1]);x.lineTo(c[0]+c[2]*28,c[1]);x.stroke();
+  });
+  function T(t,tx,ty,s,col,wt){
+    x.font=(wt||500)+' '+s+'px '+FONT;
+    x.fillStyle=col;x.textAlign='center';x.textBaseline='top';
+    x.fillText(t,tx,ty);
+  }
+  T('娱乐向 · 自我观察',W/2,100,28,'#C46B5A',600);
+  x.font='700 52px '+FONT;
+  const titleLines=wrapT(x,'你有多容易被人欺负测试',920);
+  titleLines.forEach((ln,i)=>T(ln,W/2,150+i*64,52,'#3C2A28',700));
+  let y=150+titleLines.length*64+8;
+  T('你是软柿子体质吗',W/2,y,32,'#A85A4C',500);
+  y+=56;
+  T('软柿子指数',W/2,y,28,'#C46B5A',600);
+  y+=36;
+  T(String(r.index),W/2,y,112,'#C46B5A',700);
+  y+=124;
+  T(r.level.name,W/2,y,36,'#A85A4C',700);
+  y+=52;
+  T('主导画像',W/2,y,26,'#A85A4C',600);
+  y+=40;
+  T(r.profile.title,W/2,y,56,'#3C2A28',700);
+  y+=78;
+  x.font='500 32px '+FONT;
+  const lines=wrapT(x,'「'+r.profile.portrait+'」',900);
+  lines.forEach((ln,i)=>T(ln,W/2,y+i*46,32,'#4A342F',500));
+  y+=lines.length*46+28;
+  const labels=DIM_IDS.map(id=>[PORTRAITS[id].dim, r[id]]);
+  const bw=300,bh=118,gap=18;
+  let bx=(W-(bw*3+gap*2))/2;
+  labels.forEach(it=>{
+    x.fillStyle='#FFFCF9';
+    roundRect(x,bx,y,bw,bh,24);x.fill();
+    x.strokeStyle='#F0D5C8';x.lineWidth=2;x.stroke();
+    T(it[0],bx+bw/2,y+16,26,'#8A6B66',600);
+    T(String(it[1]),bx+bw/2,y+52,46,'#C46B5A',700);
+    bx+=bw+gap;
+  });
+  y+=bh+36;
+  const footerTop=H-230;
+  const radarCenter=Math.round((y+footerTop)/2);
+  const radarR=Math.max(120, Math.min(170, Math.floor((footerTop-y-130)/2)));
+  drawRadarCanvas(x,W/2,radarCenter,radarR,r);
+  x.font='400 26px '+FONT;
+  const dlines=wrapT(x,'娱乐向自我观察，非正式心理测量、非诊断。高分是退让倾向的线索，不是性格判定。',900);
+  dlines.forEach((ln,i)=>T(ln,W/2,footerTop+i*38,26,'#8A6B66',400));
+  T(URL_,W/2,footerTop+dlines.length*38+12,22,'#C46B5A',600);
+  return cv.toDataURL('image/png');
+}
+function showShare(){
+  if(!current){toast('还没有可分享的结果');return}
+  try{
+    const u=buildShare(current);
+    $('shareImg').src=u;
+    $('shareImg').alt='你有多容易被人欺负测试 '+current.profile.title+' 软柿子指数'+current.index;
+    window.__shareUrl=u;
+    $('toast').classList.remove('show');
+    $('ov').classList.add('show');
+  }catch(e){
+    console.error(e);
+    toast('生成失败，请截图分享');
+  }
+}
+
+function isUnlocked(){try{return sessionStorage.getItem(ACCESS_KEY)==='1'}catch(e){return false}}
+function setUnlocked(code){
+  try{
+    sessionStorage.setItem(ACCESS_KEY,'1');
+    if(code) sessionStorage.setItem(ACCESS_CODE_KEY,code);
+  }catch(e){}
+}
+function clearUnlock(){
+  try{
+    sessionStorage.removeItem(ACCESS_KEY);
+    sessionStorage.removeItem(ACCESS_CODE_KEY);
+  }catch(e){}
+}
+function normalizeCode(v){
+  return String(v||'')
+    .trim()
+    .replace(/[\uFF21-\uFF3A]/g, ch=>String.fromCharCode(ch.charCodeAt(0)-0xFF21+65))
+    .replace(/[\uFF10-\uFF19]/g, ch=>String.fromCharCode(ch.charCodeAt(0)-0xFF10+48))
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g,'');
+}
+function openCodeModal(prefill){
+  $('codeMask').classList.add('show');
+  $('codeMask').setAttribute('aria-hidden','false');
+  document.body.classList.add('lock');
+  const inp=$('codeInput');
+  if(prefill!=null) inp.value=prefill;
+  setTimeout(()=>inp.focus(),40);
+}
+function closeCodeModal(){
+  $('codeMask').classList.remove('show');
+  $('codeMask').setAttribute('aria-hidden','true');
+  document.body.classList.remove('lock');
+}
+function startQuiz(){
+  ans=[];qi=0;picking=false;
+  closeCodeModal();
+  show('quiz');
+  renderQ();
+}
+function setCodeBusy(busy){
+  const btn=$('btnCodeOk');
+  btn.disabled=!!busy;
+  btn.textContent=busy?'验证中…':'开始答题';
+}
+function refreshLastBtn(){
+  let has=false;
+  try{has=!!localStorage.getItem(LAST_KEY)}catch(e){}
+  $('btnLast').hidden=!has;
+}
+function clampScore(n){
+  n=Number(n);
+  if(!Number.isFinite(n)) return null;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+function showLast(){
+  let data=null;
+  try{data=JSON.parse(localStorage.getItem(LAST_KEY)||'null')}catch(e){data=null}
+  if(!data){toast('还没有上次结果');refreshLastBtn();return}
+  const scores={};
+  for(const id of DIM_IDS){
+    const v=clampScore(data[id]);
+    if(v==null){toast('还没有上次结果');refreshLastBtn();return}
+    scores[id]=v;
+  }
+  renderResult(analyze(scores));
+  show('result');
+  toast('已打开上次结果，本次不扣次');
+}
+async function mantleFetch(url, opts){
+  const ctl=new AbortController();
+  const timer=setTimeout(()=>ctl.abort(),12000);
+  try{return await fetch(url, Object.assign({}, opts, {signal:ctl.signal}))}
+  finally{clearTimeout(timer)}
+}
+async function mantleGet(code){
+  const r=await mantleFetch(MANTLE_BASE+'/'+MANTLE_COL+'/'+encodeURIComponent(code),{headers:{'X-Mantle-Key':MANTLE_KEY}});
+  if(r.status===404) return null;
+  if(!r.ok) throw new Error('net '+r.status);
+  return r.json();
+}
+async function mantleDecr(code){
+  const r=await mantleFetch('https://mantledb.sh/v2/increment/'+MANTLE_NS+'/'+MANTLE_COL+'/'+encodeURIComponent(code),{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Mantle-Key':MANTLE_KEY},
+    body:JSON.stringify({key:'remaining',by:-1})
+  });
+  if(!r.ok) throw new Error('net '+r.status);
+  return r.json();
+}
+async function mantleIncr(code){
+  try{
+    await mantleFetch('https://mantledb.sh/v2/increment/'+MANTLE_NS+'/'+MANTLE_COL+'/'+encodeURIComponent(code),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Mantle-Key':MANTLE_KEY},
+      body:JSON.stringify({key:'remaining',by:1})
+    });
+  }catch(e){}
+}
+async function redeemCode(code){
+  const data=await mantleGet(code);
+  if(!data||typeof data.remaining!=='number') return {ok:false,reason:'invalid'};
+  if(data.remaining<=0) return {ok:false,reason:'exhausted'};
+  const after=await mantleDecr(code);
+  const left=typeof after.remaining==='number'?after.remaining:-1;
+  if(left<0){await mantleIncr(code);return {ok:false,reason:'exhausted'}}
+  return {ok:true,remaining:left,max:data.max||3};
+}
+async function tryUnlock(fromUrl){
+  if(codeBusy) return false;
+  const code=normalizeCode($('codeInput').value);
+  $('codeInput').value=code;
+  if(!code){if(!fromUrl) toast('请输入验证码');return false}
+  if(!CODE_RE.test(code)){if(!fromUrl) toast('验证码不正确');return false}
+  codeBusy=true;
+  setCodeBusy(true);
+  try{
+    const out=await redeemCode(code);
+    if(out.ok){
+      setUnlocked(code);
+      const left=out.remaining;
+      toast(left>0?('验证成功，还可以测 '+left+' 次'):'验证成功，这是本码最后一次');
+      startQuiz();
+      return true;
+    }
+    if(!fromUrl) toast(out.reason==='exhausted'?'此验证码已用完（每个码限 3 次）':'验证码不正确');
+    return false;
+  }catch(e){
+    console.error(e);
+    if(!fromUrl) toast('网络异常，请稍后重试');
+    return false;
+  }finally{
+    codeBusy=false;
+    setCodeBusy(false);
+  }
+}
+
+$('btnStart').onclick=()=>{if(isUnlocked()){startQuiz();return} openCodeModal(null)};
+$('btnLast').onclick=()=>showLast();
+$('btnViewLast').onclick=()=>showLast();
+$('btnCodeOk').onclick=()=>tryUnlock(false);
+$('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter') tryUnlock(false)});
+$('codeInput').addEventListener('input',()=>{
+  const input=$('codeInput');
+  const v=input.value.toUpperCase();
+  if(v!==input.value){const p=input.selectionStart;input.value=v;try{input.setSelectionRange(p,p)}catch(e){}}
+});
+$('codeClose').onclick=closeCodeModal;
+$('codeMask').addEventListener('click',e=>{if(e.target===$('codeMask')) closeCodeModal()});
+$('qback').onclick=()=>{
+  if(picking) return;
+  if(qi>0){qi--;renderQ()}
+  else show('start');
+};
+$('btnRetry').onclick=()=>{
+  let pre='';
+  try{pre=sessionStorage.getItem(ACCESS_CODE_KEY)||''}catch(e){}
+  clearUnlock();
+  openCodeModal(pre);
+};
+$('btnCopy').onclick=copyText;
+$('btnImg').onclick=showShare;
+$('btnClose').onclick=()=>$('ov').classList.remove('show');
+$('btnDl').onclick=()=>{
+  if(!window.__shareUrl) return;
+  const a=document.createElement('a');
+  a.href=window.__shareUrl;
+  a.download='软柿子体质.png';
+  document.body.appendChild(a);a.click();a.remove();
+};
+fillDisclaimer($('startDisclaimer'));
+refreshLastBtn();
+(function(){
+  try{
+    const p=new URLSearchParams(location.search).get('code');
+    if(p==null||p==='') return;
+    if(isUnlocked()) return;
+    $('codeInput').value=normalizeCode(p);
+    openCodeModal($('codeInput').value);
+    tryUnlock(true);
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
