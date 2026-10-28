@@ -236,6 +236,8 @@ const MANTLE_NS='catquiz-zph420-codes';
 const MANTLE_COL='sp';
 const MANTLE_KEY='f60c0dae2088e5ccd5061a110aef0c0ff2a5b85f2658e78809c9123c9d82a22c';
 const MANTLE_BASE='https://mantledb.sh/v2/'+MANTLE_NS;
+const API_BASE='https://snappy-tundra-7uesdvk.tmp.now';
+const QUIZ_KEY='soft';
 const ACCESS_KEY='soft_persimmon_unlocked';
 const ACCESS_CODE_KEY='soft_persimmon_code';
 const LAST_KEY='soft_persimmon_last_result';
@@ -849,6 +851,9 @@ function clearUnlock(){
     sessionStorage.removeItem(ACCESS_CODE_KEY);
   }catch(e){}
 }
+function sessionCode(){
+  try{return normalizeCode(sessionStorage.getItem(ACCESS_CODE_KEY)||'')}catch(e){return ''}
+}
 function normalizeCode(v){
   return String(v||'')
     .trim()
@@ -904,6 +909,8 @@ function showLast(){
   renderResult(analyze(scores));
   show('result');
   toast('已打开上次结果，本次不扣次');
+  const code=sessionCode();
+  if(CODE_RE.test(code)) peekAccess(code).catch(()=>{});
 }
 async function mantleFetch(url, opts){
   const ctl=new AbortController();
@@ -944,6 +951,55 @@ async function redeemCode(code){
   if(left<0){await mantleIncr(code);return {ok:false,reason:'exhausted'}}
   return {ok:true,remaining:left,max:data.max||3};
 }
+async function peekCode(code){
+  const r=await mantleFetch(API_BASE+'/get?quiz='+encodeURIComponent(QUIZ_KEY)+'&code='+encodeURIComponent(code));
+  if(r.status===404) return null;
+  if(!r.ok) throw new Error('net '+r.status);
+  const data=await r.json();
+  if(!data||data.ok===false){
+    if(data&&(data.error==='not_found'||data.error==='invalid')) return null;
+    throw new Error((data&&data.error)||('net '+r.status));
+  }
+  return data;
+}
+async function redeemVault(code){
+  const r=await mantleFetch(API_BASE+'/redeem',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({quiz:QUIZ_KEY,code})
+  });
+  let data=null;
+  try{data=await r.json()}catch(e){
+    if(r.status===404) return {ok:false,reason:'invalid'};
+    throw new Error('net '+r.status);
+  }
+  if(!data||!data.ok){
+    if(data&&data.error==='exhausted') return {ok:false,reason:'exhausted'};
+    if(r.status===404||(data&&(data.error==='not_found'||data.error==='invalid'))) return {ok:false,reason:'invalid'};
+    return {ok:false,reason:(data&&data.error)||('net '+r.status)};
+  }
+  return {ok:true,remaining:data.remaining,max:data.max||3};
+}
+async function peekAccess(code){
+  try{
+    const data=await peekCode(code);
+    if(data) return data;
+  }catch(e){}
+  return mantleGet(code);
+}
+async function redeemAccess(code){
+  let vaultUnreachable=false;
+  try{
+    const vaultOut=await redeemVault(code);
+    if(vaultOut.ok||vaultOut.reason==='exhausted') return vaultOut;
+    if(vaultOut.reason!=='invalid') vaultUnreachable=true;
+  }catch(e){
+    vaultUnreachable=true;
+  }
+  const mantleOut=await redeemCode(code);
+  if(vaultUnreachable&&!mantleOut.ok&&mantleOut.reason!=='exhausted') throw new Error('net');
+  return mantleOut;
+}
 async function tryUnlock(fromUrl){
   if(codeBusy) return false;
   const code=normalizeCode($('codeInput').value);
@@ -953,7 +1009,7 @@ async function tryUnlock(fromUrl){
   codeBusy=true;
   setCodeBusy(true);
   try{
-    const out=await redeemCode(code);
+    const out=await redeemAccess(code);
     if(out.ok){
       setUnlocked(code);
       const left=out.remaining;
