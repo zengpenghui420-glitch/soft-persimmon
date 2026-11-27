@@ -12,14 +12,20 @@
 
 ## 订单号
 
+订单号走 MantleDB，和已发出的访问码同一个 namespace，但是单独的集合。页面不再为订单号请求 `*.vercel.app`。
+
 | 项 | 值 |
 |---|---|
-| API | `https://snappy-tundra-7uesdvk-zengpenghui420-glitch.vercel.app` |
-| 核销 | `POST /order/redeem`，JSON `{ "quiz": "soft", "orderId" }` |
-| 只读 | `GET /order/get?quiz=soft&orderId=`，不扣次、不绑定 |
+| 存储 | MantleDB `catquiz-zph420-codes` / `orders/{订单号}` |
+| 只读 | `GET /v2/.../orders/{订单号}`，不扣次、不绑定 |
+| 第一次 | 文档不存在时才 `POST` 新建：`quiz=soft`，`uses=1`，`remaining=2`，`max=3` |
+| 之后 | 只对已有文档 `increment` `uses`（+1）。不再 `POST` 整份文档 |
 | 次数 | 一个订单号只绑定这一个测试，最多 3 次 |
 | 扣次 | 第一次开始答题扣 1 次；中途刷新、继续这一次、刷新结果不扣；再测一次才再扣 |
 | 用完 | 第 4 次拒绝，原来的结果还在 |
+| 别的测试 | 文档里的 `quiz` 不是 `soft` 时拒绝，并且不写 |
+
+`POST /v2/{namespace}/{path}` 会整份覆盖，而且不认 `If-Match` / `If-None-Match`。缺文档时 `increment` 不会建档（返回 404），`PATCH` 也不会。所以页面只在读到 404 之后 POST 一次初始记录；只要读到了记录，后面只做原子 `uses +1`，避免把次数打回初始值或改掉绑定。访问码仍在 `sp/`，订单号不会读写那个集合。
 
 ## 已发出的访问码
 

@@ -57,6 +57,9 @@ function freshState() {
     mantleMissing: false,
     posts: 0,
     peeks: 0,
+    orderCreates: 0,
+    orderUseIncs: 0,
+    orderDoc: null,
     vaultPosts: 0,
     vaultGets: 0,
     mantleGets: 0,
@@ -72,19 +75,6 @@ async function send(req, status, obj) {
   await req.respond({ status, headers: CORS, body: JSON.stringify(obj) });
 }
 
-function orderBody(state, orderId) {
-  return {
-    ok: true,
-    remaining: state.max - state.uses,
-    max: state.max,
-    uses: state.uses,
-    quiz: 'soft',
-    orderId,
-    bound: true,
-    paidVerified: false,
-  };
-}
-
 async function handleApi(req, u, state) {
   if (req.method() === 'OPTIONS') {
     await req.respond({ status: 204, headers: CORS, body: '' });
@@ -92,34 +82,10 @@ async function handleApi(req, u, state) {
   }
   const quiz = u.searchParams.get('quiz');
   state.urls.push(req.method() + ' ' + u.pathname + u.search);
-  if (u.pathname === '/order/get') {
-    state.peeks++;
-    if (quiz !== 'soft') return send(req, 400, { ok: false, error: 'invalid' });
-    if (state.cross) return send(req, 403, { ok: false, error: 'bound_other_quiz' });
-    if (!state.bound) return send(req, 404, { ok: false, error: 'not_found' });
-    return send(req, 200, orderBody(state, u.searchParams.get('orderId')));
-  }
-  if (u.pathname === '/order/redeem' && req.method() === 'POST') {
-    const body = JSON.parse(req.postData() || '{}');
-    state.bodies.push(body);
-    state.posts++;
-    if (state.redeemMode === 'timeout-commit' || state.redeemMode === 'timeout-drop') {
-      if (state.redeemMode === 'timeout-commit') {
-        state.uses += 1;
-        state.bound = true;
-      }
-      const snapshot = orderBody(state, body.orderId);
-      setTimeout(() => {
-        send(req, 200, snapshot).catch(() => {});
-      }, 1500);
-      return;
-    }
-    if (body.quiz !== 'soft' || body.orderId !== ORDER) return send(req, 400, { ok: false, error: 'invalid' });
-    if (state.cross) return send(req, 403, { ok: false, error: 'bound_other_quiz' });
-    if (state.uses >= state.max) return send(req, 403, { ok: false, error: 'exhausted', remaining: 0, max: 3 });
-    state.uses += 1;
-    state.bound = true;
-    return send(req, 200, orderBody(state, body.orderId));
+  if (u.pathname === '/order/get' || u.pathname === '/order/redeem') {
+    state.unexpected.push('vercel-order ' + req.method() + ' ' + u.pathname);
+    await req.abort('failed');
+    return;
   }
   if (u.pathname === '/redeem' && req.method() === 'POST') {
     const body = JSON.parse(req.postData() || '{}');
@@ -143,12 +109,83 @@ async function handleApi(req, u, state) {
   await req.abort('failed');
 }
 
+function orderVisible(state) {
+  if (state.cross) return { quiz: 'other', max: 3, uses: 1, remaining: 2 };
+  if (!state.bound || !state.orderDoc) return null;
+  return state.orderDoc;
+}
+
+async function handleMantleOrder(req, u, state) {
+  const path = u.pathname;
+  const isInc = path.includes('/increment/');
+  if (req.method() === 'GET' && !isInc) {
+    state.peeks++;
+    const doc = orderVisible(state);
+    if (!doc) return send(req, 404, { error: 'Path not found at this namespace' });
+    return send(req, 200, doc);
+  }
+  if (req.method() === 'POST' && isInc) {
+    const body = JSON.parse(req.postData() || '{}');
+    state.bodies.push(body);
+    const apply = () => {
+      if (!state.orderDoc || !state.bound) return null;
+      const cur = typeof state.orderDoc[body.key] === 'number' ? state.orderDoc[body.key] : 0;
+      const next = cur + body.by;
+      state.orderDoc = Object.assign({}, state.orderDoc, { [body.key]: next });
+      if (body.key === 'uses') {
+        state.uses = next;
+        state.posts++;
+        state.orderUseIncs++;
+      }
+      return next;
+    };
+    if (state.redeemMode === 'timeout-drop' || state.redeemMode === 'timeout-commit') {
+      let next = null;
+      if (state.redeemMode === 'timeout-commit') next = apply();
+      else state.posts++;
+      setTimeout(() => {
+        const payload = next == null ? { success: false, error: 'timeout' } : { success: true, [body.key]: next };
+        send(req, 200, payload).catch(() => {});
+      }, 1500);
+      return;
+    }
+    const next = apply();
+    if (next == null) return send(req, 404, { error: 'Path not found at this namespace' });
+    return send(req, 200, { success: true, [body.key]: next });
+  }
+  if (req.method() === 'POST' && !isInc) {
+    const body = JSON.parse(req.postData() || '{}');
+    state.bodies.push(body);
+    const apply = () => {
+      state.orderDoc = body;
+      state.bound = true;
+      state.uses = typeof body.uses === 'number' ? body.uses : state.uses;
+      state.posts++;
+      state.orderCreates++;
+    };
+    if (state.redeemMode === 'timeout-drop' || state.redeemMode === 'timeout-commit') {
+      if (state.redeemMode === 'timeout-commit') apply();
+      else state.posts++;
+      setTimeout(() => {
+        send(req, 200, { success: true, path: 'orders/' + ORDER }).catch(() => {});
+      }, 1500);
+      return;
+    }
+    if (body.quiz !== 'soft') return send(req, 400, { error: 'invalid' });
+    apply();
+    return send(req, 200, { success: true, path: 'orders/' + ORDER });
+  }
+  state.unexpected.push('mantle-order ' + req.method() + ' ' + path);
+  await req.abort('failed');
+}
+
 async function handleMantle(req, u, state) {
   if (req.method() === 'OPTIONS') {
     await req.respond({ status: 204, headers: CORS, body: '' });
     return;
   }
   state.urls.push(req.method() + ' mantle ' + u.pathname);
+  if (u.pathname.includes('/orders/')) return handleMantleOrder(req, u, state);
   if (!u.pathname.includes('/sp/')) {
     state.unexpected.push('mantle-col ' + u.pathname);
     await req.abort('failed');
@@ -310,6 +347,10 @@ test('format helpers reject patterns and keep SP codes off the order path', asyn
     other: decideTimeout(0, { ok: false, error: 'bound_other_quiz' }),
     quiz: QUIZ_KEY,
     api: API_BASE,
+    col: ORDER_COL,
+    orderUrl: orderDocUrl(order),
+    p19: orderFormatError('P9900000000000001378'),
+    p19c: classifyInput('P9900000000000001378').type,
   }), ORDER);
   assert(out.good === '', 'legal synthetic id rejected ' + out.good);
   assert(out.repeat === 'invalid' && out.seq === 'invalid', 'pattern ids should be invalid');
@@ -321,6 +362,8 @@ test('format helpers reject patterns and keep SP codes off the order path', asyn
   assert(out.acceptBound === 'accept', 'unknown before-count must not redeem again once bound');
   assert(out.other === 'return', 'cross-quiz peek is not a retry');
   assert(out.quiz === 'soft' && out.api === API, 'quiz/api constants');
+  assert(out.col === 'orders' && out.orderUrl.includes('/orders/' + ORDER) && !out.orderUrl.includes('/sp/'), 'order collection ' + out.orderUrl);
+  assert(out.p19 === 'invalid' && out.p19c === 'order-invalid', '19-digit id must stay invalid');
   assert(state.posts === 0 && state.vaultPosts === 0 && state.unexpected.length === 0, 'format checks must not hit the network', state);
   assert(errors.length === 0, errors.join('\n'));
   await page.close();
@@ -334,8 +377,9 @@ test('first redeem, refresh, continue', async (browser) => {
   assert(visible.includes('你有多容易被人欺负测试'), 'product title');
   await openAndSubmit(page, ' 「p8472-9103-8475-610293」 ');
   await waitQuiz(page);
-  assert(state.posts === 1 && state.uses === 1 && state.peeks === 1, 'first redeem counts', state);
-  assert(state.bodies[0].quiz === 'soft' && state.bodies[0].orderId === ORDER && !('code' in state.bodies[0]), 'redeem body', state);
+  assert(state.posts === 1 && state.uses === 1 && state.peeks === 3 && state.orderCreates === 1 && state.orderUseIncs === 0, 'first redeem counts', state);
+  assert(state.bodies[0].quiz === 'soft' && state.bodies[0].uses === 1 && state.bodies[0].remaining === 2 && state.bodies[0].max === 3 && !('code' in state.bodies[0]), 'redeem body', state);
+  assert(state.urls.some((u) => u.includes('/orders/' + ORDER)) && !state.urls.some((u) => u.includes('/sp/') || u.includes('/order/')), 'order url', state);
   assert(state.vaultPosts === 0 && state.mantleGets === 0, 'order path must not touch legacy', state);
   const toast = await page.$eval('#toast', (el) => el.textContent);
   assert(toast.includes('还可以测 2 次') && !toast.includes('付款'), 'success copy ' + toast);
@@ -390,12 +434,12 @@ test('result peek, retest, fourth reject keeps the result', async (browser) => {
   await waitResult(page);
   const peeked = await page.$eval('.index-num', (el) => el.textContent);
   assert(peeked === firstIndex, 'result refresh changed the index');
-  assert(state.posts === posts && state.peeks === peeks + 1, 'result refresh must peek once and not redeem', state);
-  assert(state.urls.some((u) => u.startsWith('GET /order/get?quiz=soft&orderId=' + ORDER)), 'peek url', state);
+  assert(state.posts === posts && state.peeks === peeks + 1 && state.orderUseIncs === 0, 'result refresh must peek once and not redeem', state);
+  assert(state.urls.some((u) => u.startsWith('GET mantle ') && u.includes('/orders/' + ORDER)), 'peek url', state);
 
   await page.click('#btnRetry');
   await waitQuiz(page);
-  assert(state.posts === 2 && state.uses === 2, 'retest should consume the second use', state);
+  assert(state.posts === 2 && state.uses === 2 && state.orderCreates === 1 && state.orderUseIncs === 1, 'retest should consume the second use', state);
   const restarted = await page.evaluate(() => ({ prog: document.getElementById('qprog').textContent, len: ans.length }));
   assert(restarted.prog === '1 / 18' && restarted.len === 0, 'retest should open a new attempt ' + JSON.stringify(restarted));
   await fastFinish(page);
@@ -463,6 +507,9 @@ test('invalid and unknown input never call the network', async (browser) => {
   const state = freshState();
   const { page, errors } = await newPage(browser, state);
   await openAndSubmit(page, 'P123456789012345678');
+  await page.waitForFunction(() => document.getElementById('toast').textContent.includes('格式不对'));
+  await page.$eval('#codeInput', (el) => { el.value = 'P9900000000000001378'; });
+  await page.click('#btnCodeOk');
   await page.waitForFunction(() => document.getElementById('toast').textContent.includes('格式不对'));
   await page.$eval('#codeInput', (el) => { el.value = 'hello'; });
   await page.click('#btnCodeOk');
@@ -578,7 +625,8 @@ test('query string still redeems an order id or a legacy code', async (browser) 
   const order = freshState();
   const p1 = await newPage(browser, order, { path: '?code=' + ORDER });
   await waitQuiz(p1.page);
-  assert(order.posts === 1 && order.bodies[0].quiz === 'soft' && order.bodies[0].orderId === ORDER, 'query order', order);
+  assert(order.posts === 1 && order.orderCreates === 1 && order.bodies[0].quiz === 'soft' && order.bodies[0].uses === 1, 'query order', order);
+  assert(order.urls.some((u) => u.includes('/orders/' + ORDER)) && !order.urls.some((u) => u.includes('/order/')), 'query order url', order);
   await p1.page.close();
 
   const code = freshState();

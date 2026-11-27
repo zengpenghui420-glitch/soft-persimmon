@@ -238,6 +238,8 @@ const MANTLE_KEY='f60c0dae2088e5ccd5061a110aef0c0ff2a5b85f2658e78809c9123c9d82a2
 const MANTLE_BASE='https://mantledb.sh/v2/'+MANTLE_NS;
 const API_BASE='https://snappy-tundra-7uesdvk-zengpenghui420-glitch.vercel.app';
 const QUIZ_KEY='soft';
+const ORDER_COL='orders';
+const ORDER_MAX=3;
 const ACCESS_KEY='soft_persimmon_unlocked';
 const ACCESS_CODE_KEY='soft_persimmon_code';
 const KIND_KEY='soft_persimmon_kind';
@@ -937,7 +939,10 @@ function showLast(){
   show('result');
   toast('已打开上次结果，本次不扣次');
   const code=sessionCode();
-  if(CODE_RE.test(code)) peekAccess(code).catch(()=>{});
+  if(sessionKind()==='order'){
+    const orderId=sessionOrderId();
+    if(orderId&&!orderFormatError(orderId)) peekOrder(orderId).catch(()=>{});
+  }else if(CODE_RE.test(code)) peekAccess(code).catch(()=>{});
 }
 function readAttempt(){
   try{return JSON.parse(sessionStorage.getItem(ATTEMPT_KEY)||'null')}catch(e){return null}
@@ -993,11 +998,17 @@ function resumeOrderAttempt(){
   startQuiz();
 }
 /* ORDER_UNLOCK_START
-   P+18 → POST /order/redeem on first start and 再测一次. Same-tab refresh / continue
-   keeps this attempt. Result refresh is GET /order/get only. A timed-out redeem
-   peeks and posts again only when uses did not increase.
-   Already-issued SP codes stay on the original path below: vault POST /redeem,
-   and Mantle sp/ only when the vault does not have the code. An exhausted vault
+   P+18 order ids live in Mantle collection `orders` (never the access-code
+   collection). Peek is a read-only GET. The first redeem POSTs the row only
+   after a 404: Mantle POST replaces the whole document and ignores
+   If-Match / If-None-Match, and increment does not create a missing row.
+   Once the row is visible this page never POSTs it again. Later redeems
+   atomically increment `uses`, which keeps `quiz` and cannot lower the
+   counter. A different quiz is returned as bound_other_quiz and not written.
+   Same-tab refresh / continue keeps this attempt. A timed-out redeem peeks
+   and tries again only when uses did not increase.
+   Already-issued SP codes stay on the path below: vault POST /redeem, then
+   Mantle sp/ only when the vault does not have the code. An exhausted vault
    code does not fall through. paidVerified is never shown. */
 function normalizeOrderId(raw){
   let s=String(raw??'');
@@ -1069,27 +1080,26 @@ function reconcileWaitMs(){
   try{if(globalThis.__ORDER_RECONCILE_MS!=null)return globalThis.__ORDER_RECONCILE_MS}catch(e){}
   return 1200;
 }
-function deviceId(){
-  const k='soft_persimmon_device';
+function orderNonce(){
   try{
-    let id=localStorage.getItem(k);
-    if(id&&/^[A-Za-z0-9._:-]{8,128}$/.test(id))return id;
-    const buf=new Uint8Array(16);
+    const buf=new Uint8Array(8);
     if(typeof crypto!=='undefined'&&crypto.getRandomValues)crypto.getRandomValues(buf);
     else for(let i=0;i<buf.length;i++)buf[i]=Math.floor(Math.random()*256);
-    id=Array.from(buf,b=>b.toString(16).padStart(2,'0')).join('');
-    localStorage.setItem(k,id);
-    return id;
-  }catch(e){return ''}
+    return Array.from(buf,b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){return String(Date.now())}
 }
-function orderHeaders(json){
-  const h={};
+function orderPath(orderId){
+  if(!ORDER_COL||ORDER_COL===MANTLE_COL) throw new Error('order collection');
+  return ORDER_COL+'/'+encodeURIComponent(orderId);
+}
+function orderDocUrl(orderId){return MANTLE_BASE+'/'+orderPath(orderId)}
+function orderIncrUrl(orderId){return 'https://mantledb.sh/v2/increment/'+MANTLE_NS+'/'+orderPath(orderId)}
+function mantleKeyHeaders(json){
+  const h={'X-Mantle-Key':MANTLE_KEY};
   if(json)h['Content-Type']='application/json';
-  const id=deviceId();
-  if(id)h['X-Device-Id']=id;
   return h;
 }
-async function orderFetch(url,opts){
+async function mantleOrderSend(url,opts){
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),orderTimeoutMs());
   try{
@@ -1101,23 +1111,76 @@ async function orderFetch(url,opts){
     const text=await r.text();
     let data=null;
     try{data=text?JSON.parse(text):null}catch(e){data=null}
-    if(!data||typeof data!=='object'||Array.isArray(data)){
-      const err=new Error('http '+r.status);
-      err.status=r.status;
-      if(r.status===500||r.status===502||r.status===503||r.status===504)err.timeout=true;
-      else err.unavailable=true;
-      throw err;
+    if(r.status===404) return {status:404,data:(data&&typeof data==='object'&&!Array.isArray(data))?data:null};
+    if(r.status===500||r.status===502||r.status===503||r.status===504){
+      const err=new Error('timeout');err.timeout=true;err.status=r.status;throw err;
     }
-    data.status=r.status;
-    if(r.status===404&&data.error==='not_found')return {ok:false,error:'not_found',status:404};
-    if(r.status===500||r.status===502||r.status===503||r.status===504){const err=new Error('timeout');err.timeout=true;err.status=r.status;throw err}
-    return data;
+    if(!r.ok||!data||typeof data!=='object'||Array.isArray(data)){
+      const err=new Error('http '+r.status);err.unavailable=true;err.status=r.status;throw err;
+    }
+    return {status:r.status,data:data};
   }finally{clearTimeout(timer)}
 }
-function orderGetUrl(orderId){return API_BASE+'/order/get?quiz='+encodeURIComponent(QUIZ_KEY)+'&orderId='+encodeURIComponent(orderId)}
-async function peekOrder(orderId){return orderFetch(orderGetUrl(orderId),{method:'GET',headers:orderHeaders(false)})}
+async function readOrder(orderId){
+  const got=await mantleOrderSend(orderDocUrl(orderId),{method:'GET',headers:mantleKeyHeaders(false)});
+  if(got.status===404) return null;
+  return got.data;
+}
+function presentOrder(doc,orderId){
+  if(!doc||typeof doc!=='object') return {ok:false,error:'not_found'};
+  const quiz=typeof doc.quiz==='string'?doc.quiz:'';
+  if(!quiz) return {ok:false,error:'not_found'};
+  if(quiz!==QUIZ_KEY) return {ok:false,error:'bound_other_quiz'};
+  const max=Number(doc.max)>0?Number(doc.max):ORDER_MAX;
+  const uses=typeof doc.uses==='number'?doc.uses:0;
+  return {ok:true,remaining:Math.max(0,max-uses),max:max,uses:uses,quiz:quiz,orderId:orderId,bound:true,paidVerified:false};
+}
+async function incrementOrder(orderId,key,by){
+  const got=await mantleOrderSend(orderIncrUrl(orderId),{
+    method:'POST',
+    headers:mantleKeyHeaders(true),
+    body:JSON.stringify({key:key,by:by})
+  });
+  return got.data||{};
+}
+async function consumeOrder(orderId,doc){
+  const view=presentOrder(doc,orderId);
+  if(!view.ok) return view;
+  if(view.uses>=view.max) return {ok:false,error:'exhausted',remaining:0,max:view.max};
+  const inc=await incrementOrder(orderId,'uses',1);
+  const uses=typeof inc.uses==='number'?inc.uses:null;
+  if(uses==null){const err=new Error('uses');err.unavailable=true;throw err}
+  if(uses>view.max){
+    try{await incrementOrder(orderId,'uses',-1)}catch(e){}
+    return {ok:false,error:'exhausted',remaining:0,max:view.max};
+  }
+  try{await incrementOrder(orderId,'remaining',-1)}catch(e){}
+  return {ok:true,remaining:Math.max(0,view.max-uses),max:view.max,uses:uses,quiz:QUIZ_KEY,orderId:orderId,bound:true,paidVerified:false};
+}
+async function peekOrder(orderId){
+  const bad=orderFormatError(orderId);
+  if(bad) return {ok:false,error:bad};
+  const doc=await readOrder(orderId);
+  if(!doc) return {ok:false,error:'not_found'};
+  return presentOrder(doc,orderId);
+}
 async function postRedeem(orderId){
-  return orderFetch(API_BASE+'/order/redeem',{method:'POST',headers:orderHeaders(true),body:JSON.stringify({quiz:QUIZ_KEY,orderId})});
+  let doc=await readOrder(orderId);
+  if(doc) return consumeOrder(orderId,doc);
+  const nonce=orderNonce();
+  const created=await mantleOrderSend(orderDocUrl(orderId),{
+    method:'POST',
+    headers:mantleKeyHeaders(true),
+    body:JSON.stringify({quiz:QUIZ_KEY,max:ORDER_MAX,uses:1,remaining:ORDER_MAX-1,nonce:nonce})
+  });
+  if(!created.data||created.data.success===false||created.data.error){
+    const err=new Error('create');err.unavailable=true;throw err;
+  }
+  doc=await readOrder(orderId);
+  if(!doc){const err=new Error('missing');err.unavailable=true;throw err}
+  if(doc.quiz&&doc.quiz!==QUIZ_KEY) return {ok:false,error:'bound_other_quiz'};
+  if(doc.nonce!==nonce) return consumeOrder(orderId,doc);
+  return presentOrder(doc,orderId);
 }
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 async function reconcileTimeout(orderId,beforeUses){

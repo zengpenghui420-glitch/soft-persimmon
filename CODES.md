@@ -4,6 +4,7 @@
 - 字符表：`ABCDEFGHJKMNPQRSTUVWXYZ23456789`（不含 I、L、O、0、1）
 - 每个验证码最多使用 **3 次**（跨设备共享计数，存在 MantleDB）
 - 命名空间：`catquiz-zph420-codes`，集合：**`sp/`**
+- 订单号不在这个集合里。订单记录在同 namespace 的 `orders/{订单号}`，不要把订单号写进 `sp/`
 - **只适用于本测验**。猫咪、MBTI、八字、历史、SCL、前世动物、黑暗人格、天赋潜能等其他测验的码不能在这里用，这里的 `SP` 码也不能拿到别的测验里用
 - 「重新测试」会清掉本次解锁，再次核销验证码（**−1**）
 - 「查看上次结果」只读本机 `localStorage`（键 `soft_persimmon_last_result`），**不扣次**
