@@ -238,15 +238,14 @@ const MANTLE_KEY='f60c0dae2088e5ccd5061a110aef0c0ff2a5b85f2658e78809c9123c9d82a2
 const MANTLE_BASE='https://mantledb.sh/v2/'+MANTLE_NS;
 const API_BASE='https://snappy-tundra-7uesdvk-zengpenghui420-glitch.vercel.app';
 const QUIZ_KEY='soft';
-const ORDER_COL='orders';
 const ORDER_MAX=3;
+const ORDER_USES_KEY='soft_persimmon_order_uses';
 const ACCESS_KEY='soft_persimmon_unlocked';
 const ACCESS_CODE_KEY='soft_persimmon_code';
 const KIND_KEY='soft_persimmon_kind';
 const PHASE_KEY='soft_persimmon_phase';
 const ATTEMPT_KEY='soft_persimmon_attempt';
 const LAST_KEY='soft_persimmon_last_result';
-const ORDER_TIMEOUT_MS=12000;
 const CODE_RE=/^SP[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}$/;
 const URL_='https://zengpenghui420-glitch.github.io/soft-persimmon/';
 const DISCLAIMER='本测试为娱乐向自我观察，题目为原创日常情景，非正式心理测量、非诊断。软柿子指数只是在关系里更容易退让的倾向线索，高分不等于软弱无能，也不是性格缺陷。若长期感到委屈，或关系里的伤害已经很大，可以寻求正规心理咨询。';
@@ -939,10 +938,7 @@ function showLast(){
   show('result');
   toast('已打开上次结果，本次不扣次');
   const code=sessionCode();
-  if(sessionKind()==='order'){
-    const orderId=sessionOrderId();
-    if(orderId&&!orderFormatError(orderId)) peekOrder(orderId).catch(()=>{});
-  }else if(CODE_RE.test(code)) peekAccess(code).catch(()=>{});
+  if(CODE_RE.test(code)) peekAccess(code).catch(()=>{});
 }
 function readAttempt(){
   try{return JSON.parse(sessionStorage.getItem(ATTEMPT_KEY)||'null')}catch(e){return null}
@@ -998,15 +994,11 @@ function resumeOrderAttempt(){
   startQuiz();
 }
 /* ORDER_UNLOCK_START
-   P+18 order ids live in Mantle collection `orders` (never the access-code
-   collection). Peek is a read-only GET. The first redeem POSTs the row only
-   after a 404: Mantle POST replaces the whole document and ignores
-   If-Match / If-None-Match, and increment does not create a missing row.
-   Once the row is visible this page never POSTs it again. Later redeems
-   atomically increment `uses`, which keeps `quiz` and cannot lower the
-   counter. A different quiz is returned as bound_other_quiz and not written.
-   Same-tab refresh / continue keeps this attempt. A timed-out redeem peeks
-   and tries again only when uses did not increase.
+   A format-valid P+18 id starts immediately. This path makes no request.
+   The "还可以测 N 次" line is remembered on this device and changes only
+   when a new attempt starts (first entry or 再测一次). Refresh, continue,
+   and 查看上次结果 leave it as it is. A format-valid id still starts after
+   the displayed count passes 3.
    Already-issued SP codes stay on the path below: vault POST /redeem, then
    Mantle sp/ only when the vault does not have the code. An exhausted vault
    code does not fall through. paidVerified is never shown. */
@@ -1046,183 +1038,36 @@ function classifyInput(raw){
   if(CODE_RE.test(code))return {type:'code',code};
   return {type:'other'};
 }
-function usesOf(res){
-  if(!res)return null;
-  if(res.ok&&typeof res.uses==='number')return res.uses;
-  if(res.error==='not_found')return 0;
-  return null;
-}
-function decideTimeout(beforeUses,after){
-  if(!after)return 'giveup';
-  if(!after.ok&&after.error&&after.error!=='not_found')return 'return';
-  const afterUses=usesOf(after);
-  if(after.ok&&beforeUses!=null&&afterUses!=null&&afterUses>beforeUses)return 'accept';
-  if(after.ok&&beforeUses==null)return 'accept';
-  if(afterUses===0||(beforeUses!=null&&afterUses!=null&&afterUses===beforeUses))return 'retry';
-  return 'giveup';
-}
 function orderFailText(res){
   const e=res&&(res.error||res.reason);
   if(e==='invalid')return '订单号格式不对，请到小红书「我的订单」里复制';
-  if(e==='bound_other_quiz')return '这个订单号已经用来测过别的测试了';
-  if(e==='exhausted')return '这个订单号的 3 次已经用完了';
-  if(e==='rate_limited')return '试的次数有点多，请稍后再试';
-  return '暂时验证不了，请稍后再试';
+  return '订单号格式不对，请到小红书「我的订单」里复制';
 }
 function orderSuccessText(res){
+  if(!res||typeof res.uses!=='number'||res.uses>ORDER_MAX) return '验证成功';
   return res.remaining>0?'验证成功，还可以测 '+res.remaining+' 次':'验证成功，这是最后一次';
 }
-function orderTimeoutMs(){
-  try{if(globalThis.__ORDER_TIMEOUT_MS)return globalThis.__ORDER_TIMEOUT_MS}catch(e){}
-  return ORDER_TIMEOUT_MS;
-}
-function reconcileWaitMs(){
-  try{if(globalThis.__ORDER_RECONCILE_MS!=null)return globalThis.__ORDER_RECONCILE_MS}catch(e){}
-  return 1200;
-}
-function orderNonce(){
+function readOrderUseMap(){
   try{
-    const buf=new Uint8Array(8);
-    if(typeof crypto!=='undefined'&&crypto.getRandomValues)crypto.getRandomValues(buf);
-    else for(let i=0;i<buf.length;i++)buf[i]=Math.floor(Math.random()*256);
-    return Array.from(buf,b=>b.toString(16).padStart(2,'0')).join('');
-  }catch(e){return String(Date.now())}
+    const raw=JSON.parse(localStorage.getItem(ORDER_USES_KEY)||'{}');
+    return raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  }catch(e){return {}}
 }
-function orderPath(orderId){
-  if(!ORDER_COL||ORDER_COL===MANTLE_COL) throw new Error('order collection');
-  return ORDER_COL+'/'+encodeURIComponent(orderId);
+function shownOrderUses(orderId){
+  const n=Number(readOrderUseMap()[orderId]);
+  return Number.isFinite(n)&&n>0?Math.floor(n):0;
 }
-function orderDocUrl(orderId){return MANTLE_BASE+'/'+orderPath(orderId)}
-function orderIncrUrl(orderId){return 'https://mantledb.sh/v2/increment/'+MANTLE_NS+'/'+orderPath(orderId)}
-function mantleKeyHeaders(json){
-  const h={'X-Mantle-Key':MANTLE_KEY};
-  if(json)h['Content-Type']='application/json';
-  return h;
+function noteDisplayedUse(orderId){
+  const uses=shownOrderUses(orderId)+1;
+  const all=readOrderUseMap();
+  all[orderId]=uses;
+  try{localStorage.setItem(ORDER_USES_KEY, JSON.stringify(all))}catch(e){}
+  return {ok:true,uses:uses,remaining:Math.max(0,ORDER_MAX-uses),max:ORDER_MAX,paidVerified:false};
 }
-async function mantleOrderSend(url,opts){
-  const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),orderTimeoutMs());
-  try{
-    let r;
-    try{r=await fetch(url,Object.assign({},opts,{signal:ctrl.signal,cache:'no-store'}))}
-    catch(e){
-      const err=new Error('timeout');err.timeout=true;throw err;
-    }
-    const text=await r.text();
-    let data=null;
-    try{data=text?JSON.parse(text):null}catch(e){data=null}
-    if(r.status===404) return {status:404,data:(data&&typeof data==='object'&&!Array.isArray(data))?data:null};
-    if(r.status===500||r.status===502||r.status===503||r.status===504){
-      const err=new Error('timeout');err.timeout=true;err.status=r.status;throw err;
-    }
-    if(!r.ok||!data||typeof data!=='object'||Array.isArray(data)){
-      const err=new Error('http '+r.status);err.unavailable=true;err.status=r.status;throw err;
-    }
-    return {status:r.status,data:data};
-  }finally{clearTimeout(timer)}
-}
-async function readOrder(orderId){
-  const got=await mantleOrderSend(orderDocUrl(orderId),{method:'GET',headers:mantleKeyHeaders(false)});
-  if(got.status===404) return null;
-  return got.data;
-}
-function presentOrder(doc,orderId){
-  if(!doc||typeof doc!=='object') return {ok:false,error:'not_found'};
-  const quiz=typeof doc.quiz==='string'?doc.quiz:'';
-  if(!quiz) return {ok:false,error:'not_found'};
-  if(quiz!==QUIZ_KEY) return {ok:false,error:'bound_other_quiz'};
-  const max=Number(doc.max)>0?Number(doc.max):ORDER_MAX;
-  const uses=typeof doc.uses==='number'?doc.uses:0;
-  return {ok:true,remaining:Math.max(0,max-uses),max:max,uses:uses,quiz:quiz,orderId:orderId,bound:true,paidVerified:false};
-}
-async function incrementOrder(orderId,key,by){
-  const got=await mantleOrderSend(orderIncrUrl(orderId),{
-    method:'POST',
-    headers:mantleKeyHeaders(true),
-    body:JSON.stringify({key:key,by:by})
-  });
-  return got.data||{};
-}
-async function consumeOrder(orderId,doc){
-  const view=presentOrder(doc,orderId);
-  if(!view.ok) return view;
-  if(view.uses>=view.max) return {ok:false,error:'exhausted',remaining:0,max:view.max};
-  const inc=await incrementOrder(orderId,'uses',1);
-  const uses=typeof inc.uses==='number'?inc.uses:null;
-  if(uses==null){const err=new Error('uses');err.unavailable=true;throw err}
-  if(uses>view.max){
-    try{await incrementOrder(orderId,'uses',-1)}catch(e){}
-    return {ok:false,error:'exhausted',remaining:0,max:view.max};
-  }
-  try{await incrementOrder(orderId,'remaining',-1)}catch(e){}
-  return {ok:true,remaining:Math.max(0,view.max-uses),max:view.max,uses:uses,quiz:QUIZ_KEY,orderId:orderId,bound:true,paidVerified:false};
-}
-async function peekOrder(orderId){
+function redeemOrder(orderId){
   const bad=orderFormatError(orderId);
   if(bad) return {ok:false,error:bad};
-  const doc=await readOrder(orderId);
-  if(!doc) return {ok:false,error:'not_found'};
-  return presentOrder(doc,orderId);
-}
-async function postRedeem(orderId){
-  let doc=await readOrder(orderId);
-  if(doc) return consumeOrder(orderId,doc);
-  const nonce=orderNonce();
-  const created=await mantleOrderSend(orderDocUrl(orderId),{
-    method:'POST',
-    headers:mantleKeyHeaders(true),
-    body:JSON.stringify({quiz:QUIZ_KEY,max:ORDER_MAX,uses:1,remaining:ORDER_MAX-1,nonce:nonce})
-  });
-  if(!created.data||created.data.success===false||created.data.error){
-    const err=new Error('create');err.unavailable=true;throw err;
-  }
-  doc=await readOrder(orderId);
-  if(!doc){const err=new Error('missing');err.unavailable=true;throw err}
-  if(doc.quiz&&doc.quiz!==QUIZ_KEY) return {ok:false,error:'bound_other_quiz'};
-  if(doc.nonce!==nonce) return consumeOrder(orderId,doc);
-  return presentOrder(doc,orderId);
-}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-async function reconcileTimeout(orderId,beforeUses){
-  let after=null;
-  try{after=await peekOrder(orderId)}catch(e){after=null}
-  let action=decideTimeout(beforeUses,after);
-  if(action==='retry'||action==='giveup'){
-    await sleep(reconcileWaitMs());
-    try{after=await peekOrder(orderId)}catch(e){}
-    const again=decideTimeout(beforeUses,after);
-    if(again==='accept'||again==='return'||again==='retry')action=again;
-  }
-  return {action,after};
-}
-async function redeemOrder(orderId){
-  const bad=orderFormatError(orderId);
-  if(bad)return {ok:false,error:bad};
-  let beforeUses=null;
-  try{
-    const before=await peekOrder(orderId);
-    if(before&&before.ok&&(before.remaining<=0||(typeof before.max==='number'&&typeof before.uses==='number'&&before.uses>=before.max))){
-      return {ok:false,error:'exhausted',remaining:0,max:before.max||3};
-    }
-    if(before&&!before.ok&&before.error&&before.error!=='not_found')return before;
-    beforeUses=usesOf(before);
-  }catch(e){
-    if(!(e&&(e.unavailable||e.timeout)))throw e;
-  }
-  async function once(){
-    try{return {kind:'res',res:await postRedeem(orderId)}}
-    catch(e){if(e&&e.timeout)return {kind:'timeout'};throw e}
-  }
-  let outcome=await once();
-  if(outcome.kind==='res')return outcome.res;
-  let rec=await reconcileTimeout(orderId,beforeUses);
-  if(rec.action==='accept'||rec.action==='return')return rec.after;
-  if(rec.action!=='retry'){const err=new Error('timeout');err.timeout=true;throw err}
-  outcome=await once();
-  if(outcome.kind==='res')return outcome.res;
-  rec=await reconcileTimeout(orderId,beforeUses);
-  if(rec.action==='accept'||rec.action==='return')return rec.after;
-  const err=new Error('timeout');err.timeout=true;throw err;
+  return noteDisplayedUse(orderId);
 }
 /* ORDER_UNLOCK_END */
 async function mantleFetch(url, opts){
@@ -1313,30 +1158,14 @@ async function redeemAccess(code){
   if(vaultUnreachable&&!mantleOut.ok&&mantleOut.reason!=='exhausted') throw new Error('net');
   return mantleOut;
 }
-async function restoreOrderResult(fromClick){
+function restoreOrderResult(fromClick){
   if(sessionKind()!=='order') return false;
   const scores=readOrderScores();
   const orderId=sessionOrderId();
-  if(!scores||!orderId){if(fromClick) openCodeModal(null);return false}
-  if(unlockBusy) return false;
-  unlockBusy=true;
-  try{
-    const peek=await peekOrder(orderId);
-    if(!peek.ok){
-      if(peek.error==='not_found') clearUnlock();
-      else toast(orderFailText(peek));
-      show('start');
-      return false;
-    }
-    renderResult(analyze(scores));
-    show('result');
-    return true;
-  }catch(e){
-    console.error(e);
-    show('start');
-    toast('暂时验证不了，请稍后再试');
-    return false;
-  }finally{unlockBusy=false}
+  if(!scores||!orderId||orderFormatError(orderId)){if(fromClick) openCodeModal(null);return false}
+  renderResult(analyze(scores));
+  show('result');
+  return true;
 }
 async function tryUnlock(fromUrl){
   const cls=classifyInput($('codeInput').value);
@@ -1353,7 +1182,7 @@ async function tryUnlock(fromUrl){
   setCodeBusy(true);
   try{
     if(cls.type==='order'){
-      const res=await redeemOrder(cls.orderId);
+      const res=redeemOrder(cls.orderId);
       if(res&&res.ok){
         setUnlockedOrder(cls.orderId);
         toast(orderSuccessText(res));
@@ -1393,14 +1222,11 @@ async function retryOrder(){
   const prev=btn.textContent;
   btn.textContent='验证中…';
   try{
-    const res=await redeemOrder(orderId);
+    const res=redeemOrder(orderId);
     if(!res||!res.ok){toast(orderFailText(res));return}
     setUnlockedOrder(orderId);
     toast(orderSuccessText(res));
     startQuiz();
-  }catch(e){
-    console.error(e);
-    toast('暂时验证不了，请稍后再试');
   }finally{
     btn.disabled=false;
     btn.textContent=prev;

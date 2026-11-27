@@ -57,9 +57,6 @@ function freshState() {
     mantleMissing: false,
     posts: 0,
     peeks: 0,
-    orderCreates: 0,
-    orderUseIncs: 0,
-    orderDoc: null,
     vaultPosts: 0,
     vaultGets: 0,
     mantleGets: 0,
@@ -109,83 +106,17 @@ async function handleApi(req, u, state) {
   await req.abort('failed');
 }
 
-function orderVisible(state) {
-  if (state.cross) return { quiz: 'other', max: 3, uses: 1, remaining: 2 };
-  if (!state.bound || !state.orderDoc) return null;
-  return state.orderDoc;
-}
-
-async function handleMantleOrder(req, u, state) {
-  const path = u.pathname;
-  const isInc = path.includes('/increment/');
-  if (req.method() === 'GET' && !isInc) {
-    state.peeks++;
-    const doc = orderVisible(state);
-    if (!doc) return send(req, 404, { error: 'Path not found at this namespace' });
-    return send(req, 200, doc);
-  }
-  if (req.method() === 'POST' && isInc) {
-    const body = JSON.parse(req.postData() || '{}');
-    state.bodies.push(body);
-    const apply = () => {
-      if (!state.orderDoc || !state.bound) return null;
-      const cur = typeof state.orderDoc[body.key] === 'number' ? state.orderDoc[body.key] : 0;
-      const next = cur + body.by;
-      state.orderDoc = Object.assign({}, state.orderDoc, { [body.key]: next });
-      if (body.key === 'uses') {
-        state.uses = next;
-        state.posts++;
-        state.orderUseIncs++;
-      }
-      return next;
-    };
-    if (state.redeemMode === 'timeout-drop' || state.redeemMode === 'timeout-commit') {
-      let next = null;
-      if (state.redeemMode === 'timeout-commit') next = apply();
-      else state.posts++;
-      setTimeout(() => {
-        const payload = next == null ? { success: false, error: 'timeout' } : { success: true, [body.key]: next };
-        send(req, 200, payload).catch(() => {});
-      }, 1500);
-      return;
-    }
-    const next = apply();
-    if (next == null) return send(req, 404, { error: 'Path not found at this namespace' });
-    return send(req, 200, { success: true, [body.key]: next });
-  }
-  if (req.method() === 'POST' && !isInc) {
-    const body = JSON.parse(req.postData() || '{}');
-    state.bodies.push(body);
-    const apply = () => {
-      state.orderDoc = body;
-      state.bound = true;
-      state.uses = typeof body.uses === 'number' ? body.uses : state.uses;
-      state.posts++;
-      state.orderCreates++;
-    };
-    if (state.redeemMode === 'timeout-drop' || state.redeemMode === 'timeout-commit') {
-      if (state.redeemMode === 'timeout-commit') apply();
-      else state.posts++;
-      setTimeout(() => {
-        send(req, 200, { success: true, path: 'orders/' + ORDER }).catch(() => {});
-      }, 1500);
-      return;
-    }
-    if (body.quiz !== 'soft') return send(req, 400, { error: 'invalid' });
-    apply();
-    return send(req, 200, { success: true, path: 'orders/' + ORDER });
-  }
-  state.unexpected.push('mantle-order ' + req.method() + ' ' + path);
-  await req.abort('failed');
-}
-
 async function handleMantle(req, u, state) {
   if (req.method() === 'OPTIONS') {
     await req.respond({ status: 204, headers: CORS, body: '' });
     return;
   }
   state.urls.push(req.method() + ' mantle ' + u.pathname);
-  if (u.pathname.includes('/orders/')) return handleMantleOrder(req, u, state);
+  if (u.pathname.includes('/orders/')) {
+    state.unexpected.push('mantle-order ' + u.pathname);
+    await req.abort('failed');
+    return;
+  }
   if (!u.pathname.includes('/sp/')) {
     state.unexpected.push('mantle-col ' + u.pathname);
     await req.abort('failed');
@@ -317,11 +248,30 @@ async function newPage(browser, state, opts = {}) {
   const errors = [];
   page.on('pageerror', (err) => errors.push(String(err)));
   await page.setCacheEnabled(false);
+  await page.evaluateOnNewDocument(() => {
+    try {
+      if (sessionStorage.getItem('__test_ready')) return;
+      localStorage.clear();
+      sessionStorage.clear();
+      sessionStorage.setItem('__test_ready', '1');
+    } catch (e) {}
+  });
   await page.setViewport(opts.viewport || { width: 390, height: 844, isMobile: true, hasTouch: true });
   await arm(page, state, opts);
   await page.goto(BASE + (opts.path || ''), { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => typeof redeemOrder === 'function' && typeof redeemAccess === 'function');
   return { page, errors };
+}
+
+async function shownUses(page, orderId = ORDER) {
+  return page.evaluate((id) => shownOrderUses(id), orderId);
+}
+
+function assertNoOrderNet(state, msg) {
+  const hit = state.urls.filter((u) => u.includes('/orders/') || u.includes('/order/') || u.includes('vercel'));
+  assert(hit.length === 0 && state.unexpected.length === 0, msg, state);
+  assert(state.posts === 0 && state.peeks === 0 && state.vaultPosts === 0 && state.vaultGets === 0, msg, state);
+  assert(state.mantleGets === 0 && state.mantleDecr === 0 && state.mantleIncr === 0, msg, state);
 }
 
 const cases = [];
@@ -339,31 +289,24 @@ test('format helpers reject patterns and keep SP codes off the order path', asyn
     junk: classifyInput('hello'),
     badCode: classifyInput('SPIIII'),
     shortP: classifyInput('P12345'),
-    accept: decideTimeout(0, { ok: true, uses: 1 }),
-    retrySame: decideTimeout(1, { ok: true, uses: 1 }),
-    retryMiss: decideTimeout(0, { ok: false, error: 'not_found' }),
-    acceptBound: decideTimeout(null, { ok: true, uses: 2 }),
-    noDouble: decideTimeout(1, { ok: true, uses: 2 }),
-    other: decideTimeout(0, { ok: false, error: 'bound_other_quiz' }),
     quiz: QUIZ_KEY,
     api: API_BASE,
-    col: ORDER_COL,
-    orderUrl: orderDocUrl(order),
     p19: orderFormatError('P9900000000000001378'),
     p19c: classifyInput('P9900000000000001378').type,
+    copy: orderSuccessText({ ok: true, uses: 1, remaining: 2 }),
+    lastCopy: orderSuccessText({ ok: true, uses: 3, remaining: 0 }),
+    laterCopy: orderSuccessText({ ok: true, uses: 4, remaining: 0 }),
   }), ORDER);
   assert(out.good === '', 'legal synthetic id rejected ' + out.good);
   assert(out.repeat === 'invalid' && out.seq === 'invalid', 'pattern ids should be invalid');
   assert(out.pasted.type === 'order' && out.pasted.orderId === ORDER, 'paste normalize ' + JSON.stringify(out.pasted));
   assert(out.code.type === 'code' && out.code.code === CODE, 'spaced SP code ' + JSON.stringify(out.code));
   assert(out.junk.type === 'other' && out.badCode.type === 'other' && out.shortP.type === 'order-invalid', 'classifier mixed');
-  assert(out.accept === 'accept' && out.noDouble === 'accept', 'timeout should accept a consumed use');
-  assert(out.retrySame === 'retry' && out.retryMiss === 'retry', 'timeout should retry only when uses did not move');
-  assert(out.acceptBound === 'accept', 'unknown before-count must not redeem again once bound');
-  assert(out.other === 'return', 'cross-quiz peek is not a retry');
   assert(out.quiz === 'soft' && out.api === API, 'quiz/api constants');
-  assert(out.col === 'orders' && out.orderUrl.includes('/orders/' + ORDER) && !out.orderUrl.includes('/sp/'), 'order collection ' + out.orderUrl);
   assert(out.p19 === 'invalid' && out.p19c === 'order-invalid', '19-digit id must stay invalid');
+  assert(out.copy === '验证成功，还可以测 2 次', out.copy);
+  assert(out.lastCopy === '验证成功，这是最后一次', out.lastCopy);
+  assert(out.laterCopy === '验证成功', out.laterCopy);
   assert(state.posts === 0 && state.vaultPosts === 0 && state.unexpected.length === 0, 'format checks must not hit the network', state);
   assert(errors.length === 0, errors.join('\n'));
   await page.close();
@@ -377,23 +320,20 @@ test('first redeem, refresh, continue', async (browser) => {
   assert(visible.includes('你有多容易被人欺负测试'), 'product title');
   await openAndSubmit(page, ' 「p8472-9103-8475-610293」 ');
   await waitQuiz(page);
-  assert(state.posts === 1 && state.uses === 1 && state.peeks === 3 && state.orderCreates === 1 && state.orderUseIncs === 0, 'first redeem counts', state);
-  assert(state.bodies[0].quiz === 'soft' && state.bodies[0].uses === 1 && state.bodies[0].remaining === 2 && state.bodies[0].max === 3 && !('code' in state.bodies[0]), 'redeem body', state);
-  assert(state.urls.some((u) => u.includes('/orders/' + ORDER)) && !state.urls.some((u) => u.includes('/sp/') || u.includes('/order/')), 'order url', state);
-  assert(state.vaultPosts === 0 && state.mantleGets === 0, 'order path must not touch legacy', state);
+  assert(await shownUses(page) === 1, 'first start should display one use');
+  assertNoOrderNet(state, 'first start must not call the network');
   const toast = await page.$eval('#toast', (el) => el.textContent);
   assert(toast.includes('还可以测 2 次') && !toast.includes('付款'), 'success copy ' + toast);
   const q1 = await page.$eval('#qtext', (el) => el.textContent);
   assert(q1.startsWith('明明已经很累'), 'first question changed: ' + q1);
   await page.reload({ waitUntil: 'domcontentloaded' });
   await waitQuiz(page);
-  assert(state.posts === 1 && state.uses === 1, 'refresh at question 1 must not redeem again', state);
+  assert(await shownUses(page) === 1, 'refresh at question 1 must not change the display count');
+  assertNoOrderNet(state, 'refresh must not call the network');
   await answerOne(page);
   await answerOne(page);
   const prog = await page.$eval('#qprog', (el) => el.textContent);
   assert(prog === '3 / 18', 'progress ' + prog);
-  const postsAtQ3 = state.posts;
-  const peeksAtQ3 = state.peeks;
   await page.reload({ waitUntil: 'domcontentloaded' });
   await waitQuiz(page);
   const resumed = await page.evaluate(() => ({
@@ -403,7 +343,8 @@ test('first redeem, refresh, continue', async (browser) => {
     a1: ans[1],
   }));
   assert(resumed.prog === '3 / 18' && resumed.qi === 2 && resumed.a0 === 1 && resumed.a1 === 1, 'mid refresh ' + JSON.stringify(resumed));
-  assert(state.posts === postsAtQ3 && state.peeks === peeksAtQ3, 'mid refresh must not peek or redeem', state);
+  assert(await shownUses(page) === 1, 'mid refresh must not change the display count');
+  assertNoOrderNet(state, 'mid refresh must not call the network');
   await page.click('#qback');
   await page.click('#qback');
   await page.click('#qback');
@@ -416,89 +357,57 @@ test('first redeem, refresh, continue', async (browser) => {
     a0: ans[0],
   }));
   assert(cont.prog === '1 / 18' && cont.sel === 1 && cont.a0 === 1, 'continue reset the attempt ' + JSON.stringify(cont));
-  assert(state.posts === postsAtQ3, 'continue must not redeem', state);
+  assert(await shownUses(page) === 1, 'continue must not change the display count');
+  assertNoOrderNet(state, 'continue must not call the network');
   assert(errors.length === 0, errors.join('\n'));
   await page.close();
 });
 
-test('result peek, retest, fourth reject keeps the result', async (browser) => {
+test('result refresh and view-last do not deduct; retest does; later entry still starts', async (browser) => {
   const state = freshState();
   const { page, errors } = await newPage(browser, state);
   await openAndSubmit(page, ORDER);
   await waitQuiz(page);
   await fastFinish(page);
   const firstIndex = await page.$eval('.index-num', (el) => el.textContent);
-  const posts = state.posts;
-  const peeks = state.peeks;
   await page.reload({ waitUntil: 'domcontentloaded' });
   await waitResult(page);
   const peeked = await page.$eval('.index-num', (el) => el.textContent);
   assert(peeked === firstIndex, 'result refresh changed the index');
-  assert(state.posts === posts && state.peeks === peeks + 1 && state.orderUseIncs === 0, 'result refresh must peek once and not redeem', state);
-  assert(state.urls.some((u) => u.startsWith('GET mantle ') && u.includes('/orders/' + ORDER)), 'peek url', state);
+  assert(await shownUses(page) === 1, 'result refresh changed the display count');
+  assertNoOrderNet(state, 'result refresh must not call the network');
+
+  await page.click('#btnViewLast');
+  await page.waitForFunction(() => document.getElementById('toast').textContent.includes('不扣次'));
+  assert(await shownUses(page) === 1, 'view last changed the display count');
+  assertNoOrderNet(state, 'view last must not call the network for an order');
 
   await page.click('#btnRetry');
   await waitQuiz(page);
-  assert(state.posts === 2 && state.uses === 2 && state.orderCreates === 1 && state.orderUseIncs === 1, 'retest should consume the second use', state);
+  assert(await shownUses(page) === 2, 'retest should display the second use');
+  const secondToast = await page.$eval('#toast', (el) => el.textContent);
+  assert(secondToast.includes('还可以测 1 次'), secondToast);
   const restarted = await page.evaluate(() => ({ prog: document.getElementById('qprog').textContent, len: ans.length }));
   assert(restarted.prog === '1 / 18' && restarted.len === 0, 'retest should open a new attempt ' + JSON.stringify(restarted));
   await fastFinish(page);
   await page.click('#btnRetry');
   await waitQuiz(page);
-  assert(state.uses === 3 && state.posts === 3, 'third use', state);
+  assert(await shownUses(page) === 3, 'third displayed use');
+  const thirdToast = await page.$eval('#toast', (el) => el.textContent);
+  assert(thirdToast.includes('这是最后一次'), thirdToast);
   await fastFinish(page);
-  const kept = await page.$eval('.index-num', (el) => el.textContent);
-  const title = await page.$eval('#typeTitle', (el) => el.textContent);
-  const postsBefore = state.posts;
   await page.click('#btnRetry');
-  await page.waitForFunction(() => document.getElementById('toast').textContent.includes('3 次已经用完'));
-  const after = await page.evaluate(() => ({
-    result: document.getElementById('result').classList.contains('active'),
-    index: document.querySelector('.index-num').textContent,
-    title: document.getElementById('typeTitle').textContent,
-    phase: sessionPhase(),
-  }));
-  assert(after.result && after.index === kept && after.title === title, 'fourth try dropped the result ' + JSON.stringify(after));
-  assert(state.posts === postsBefore && state.uses === 3, 'fourth try must not redeem again', state);
-  assert(errors.length === 0, errors.join('\n'));
-  await page.close();
-});
-
-test('cross-quiz stops before redeem', async (browser) => {
-  const state = freshState();
-  state.cross = true;
-  const { page, errors } = await newPage(browser, state);
-  await openAndSubmit(page, ORDER);
-  await page.waitForFunction(() => document.getElementById('toast').textContent.includes('别的测试'));
-  const onQuiz = await page.$eval('#quiz', (el) => el.classList.contains('active'));
-  const unlocked = await page.evaluate(() => isUnlocked());
-  assert(!onQuiz && !unlocked, 'cross-quiz unlocked the quiz');
-  assert(state.posts === 0 && state.peeks === 1, 'cross-quiz must not redeem', state);
-  assert(errors.length === 0, errors.join('\n'));
-  await page.close();
-});
-
-test('timed-out redeem that already consumed does not post again', async (browser) => {
-  const state = freshState();
-  state.redeemMode = 'timeout-commit';
-  const { page, errors } = await newPage(browser, state, { timeoutMs: 200 });
-  await openAndSubmit(page, ORDER);
   await waitQuiz(page);
-  assert(state.posts === 1 && state.uses === 1, 'timeout commit posted more than once', state);
-  assert(state.peeks >= 2, 'timeout should reconcile with peek', state);
-  await page.close();
-  assert(errors.length === 0, errors.join('\n'));
-});
-
-test('timed-out redeem that did not consume retries once then stops', async (browser) => {
-  const state = freshState();
-  state.redeemMode = 'timeout-drop';
-  const { page, errors } = await newPage(browser, state, { timeoutMs: 200 });
-  await openAndSubmit(page, ORDER);
-  await page.waitForFunction(() => document.getElementById('toast').textContent.includes('暂时验证不了'), { timeout: 5000 });
-  const onQuiz = await page.$eval('#quiz', (el) => el.classList.contains('active'));
-  assert(!onQuiz && !await page.evaluate(() => isUnlocked()), 'dropped timeout must not unlock');
-  assert(state.posts === 2 && state.uses === 0, 'should retry exactly once', state);
+  await page.waitForFunction(() => document.getElementById('toast').textContent === '验证成功');
+  const after = await page.evaluate((id) => ({
+    quiz: document.getElementById('quiz').classList.contains('active'),
+    toast: document.getElementById('toast').textContent,
+    uses: shownOrderUses(id),
+  }), ORDER);
+  assert(after.quiz, 'a later entry must still open the quiz');
+  assert(after.toast === '验证成功' && !after.toast.includes('用完') && !after.toast.includes('暂时验证不了'), after.toast);
+  assert(await shownUses(page) === 4, 'later entry still records a display count');
+  assertNoOrderNet(state, 'later entry must not call the network');
   assert(errors.length === 0, errors.join('\n'));
   await page.close();
 });
@@ -625,8 +534,8 @@ test('query string still redeems an order id or a legacy code', async (browser) 
   const order = freshState();
   const p1 = await newPage(browser, order, { path: '?code=' + ORDER });
   await waitQuiz(p1.page);
-  assert(order.posts === 1 && order.orderCreates === 1 && order.bodies[0].quiz === 'soft' && order.bodies[0].uses === 1, 'query order', order);
-  assert(order.urls.some((u) => u.includes('/orders/' + ORDER)) && !order.urls.some((u) => u.includes('/order/')), 'query order url', order);
+  assert(await shownUses(p1.page) === 1, 'query order should display one use');
+  assertNoOrderNet(order, 'query order must not call the network');
   await p1.page.close();
 
   const code = freshState();
@@ -636,19 +545,18 @@ test('query string still redeems an order id or a legacy code', async (browser) 
   await p2.page.close();
 });
 
-test('result peek not_found does not reveal a saved result', async (browser) => {
+test('saved order result stays available with no server', async (browser) => {
   const state = freshState();
   const { page } = await newPage(browser, state);
   await openAndSubmit(page, ORDER);
   await waitQuiz(page);
   await fastFinish(page);
-  state.bound = false;
-  state.uses = 0;
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => document.getElementById('start').classList.contains('active'));
-  const revealed = await page.evaluate(() => document.getElementById('result').classList.contains('active') || isUnlocked());
-  assert(!revealed, 'not_found peek revealed the result');
-  assert(state.posts === 1, 'not_found peek redeemed', state);
+  await waitResult(page);
+  const revealed = await page.evaluate(() => document.getElementById('result').classList.contains('active') && isUnlocked());
+  assert(revealed, 'saved order result did not come back');
+  assert(await shownUses(page) === 1, 'restoring a result changed the display count');
+  assertNoOrderNet(state, 'restoring a result must not call the network');
   await page.close();
 });
 
